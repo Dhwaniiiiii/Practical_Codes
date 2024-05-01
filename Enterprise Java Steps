@@ -163,7 +163,8 @@ Display -> GET , @Produces("application/json")
 
 
 12)  Source Packages / Project (right click) -> New -> 
-Other (search : rest) -> IN Category : WebServices  & File Type : select RESTful Java Client.. -> next -> give Class Name : restClient ; Package : client ; Browse : Select our Project , Expand it & select JavaEE8Resource -> OK ; Finish..
+Other (search : rest) -> IN Category : WebServices  & File Type : select RESTful Java Client.. -> next -> 
+give Class Name : restClient ; Package : client ; Browse : Select our Project , Expand it & select JavaEE8Resource -> OK ; Finish..
 
 ==> RUN:  
 
