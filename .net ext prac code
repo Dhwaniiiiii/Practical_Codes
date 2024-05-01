@@ -1,0 +1,293 @@
+1)OPEN Microsoft SQL Server Management Studio
+
+2)Create A Database As Per Paper
+-Identity Specification-(Yes Karvu)
+
+3)Open Visual Studio
+
+4)Create A New Project
+-First Create API Project
+
+5)Select 1)C# 2)Windows 3)Web
+
+6)Select ASP.NET Core Web API
+
+7)Deselect Configure For HTTPS Then Click On Create.
+
+8)After Creating Project Click On Tools
+NuGet Package Manager
+Manage NuGet Packages For Solution->Browse-
+
+1)Microsoft.AspNetCore.Identity.EntityFramework-Version 3 Latest
+2)Microsoft.EntityFrameworkCore-Version 3 Latest
+3)Microsoft.EntityFrameworkCore.Design-Version 3 Latest
+4)Microsoft.EntityFrameworkCore.SqlServer-Version 3 Latest
+5)Microsoft.EntityFrameworkCore.Tools-Version 3 Latest
+
+9)Then Go To Pacakage Manager
+
+Add This Code
+   	Scaffold-DbContext "Server=DESKTOP-530F244;Database=School;Trusted_Connection=True;TrustServerCertificate=True;Integrated Security=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+Then Enter
+
+10)Go To Programe.cs
+
+Add This Code
+
+Program.cs file:-
+
+Services.AddDbContext<TestContext>(o => o.UseSqlServer("<Server=NEEL_JARI;Database=TEST;Trusted_Connection=True;TrustServerCertificate=True;Integrated Security=True;>"));
+
+OR
+
+Startup.cs file:-
+
+builder.Services.AddDbContext<TestContext>(o => o.UseSqlServer("<Server=NEEL_JARI;Database=TEST;Trusted_Connection=True;TrustServerCertificate=True;Integrated Security=True;>"));
+
+
+11)Go To Solution Explorer
+-Controller
+-Add
+Controller
+API->API Controller With Actions,Using Entity Framework-Click On Add
+
+12)Run Program
+-http://localhost:5295/api/users
+
+Create New Project
+Click On Solution Explorer-Add-New Project
+1)Create A New Project
+
+2)Select 1)C# 2)Windows 3)Web
+
+3)Select ASP.NET Core Web APP(Model-View-Controller)
+
+4)Deselect Configure For HTTPS Then Click On Create.
+
+5)Click On Solution Explorer
+Configer Startup Project
+Multiple Startup Project
+Action
+Start->Click On Ok
+
+6)Go To API Project
+Copy Models
+Paste In MVC Project -> Models
+
+7)Go To Controller
+Add
+Controller
+MVC Controller with read/write actions
+Click On Add
+Give Name
+Click On Add
+
+8)Run API Project
+And Copy Above Link
+
+9)Open Controller Of MVC Project
+Paste This Code Below
+Public Class Controller:Controller -> private string BaseUrl = "http://localhost:5129/api/users";
+
+10)For The Show Index
+Past This Code Below->
+public async Task<ActionResult> Index()
+{
+     List<User> userslist = new List<User>();
+     using(var httpClient = new HttpClient())
+     {
+          using (var Response = await httpClient.GetAsync(BaseUrl))
+          {
+               string ApiResponse=await Response.Content.ReadAsStringAsync();
+               userslist=JsonConvert.DeserializeObject<List<User>>(ApiResponse);
+          }
+     }
+     return View(userslist);
+}
+11)After Creating Project Click On Tools
+NuGet Package Manager
+Manage NuGet Packages For Solution->Browse-Newtonsoft.Json
+
+12)Click On Index
+Add View
+Razor View
+Click On Add
+ViewName[Index]
+Templet[List]
+ModelClass[Yourclass name]
+Click On Add
+Then Run The Project
+
+13)Go To Solution Explorer
+View
+User->Index.cshtml
+
+            @Html.ActionLink("Edit", "Edit", new {  id=item.Id  }) |
+            @Html.ActionLink("Details", "Details", new { id=item.Id }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+Cheange This Code In Project
+
+14)For Show The Details
+
+// GET: UserController/Details/5->Past This Code Below
+
+public async Task<ActionResult> Details(int id)
+{
+    User userslist = null;
+    using (var httpClient = new HttpClient())
+    {
+        using (var Response = await httpClient.GetAsync(BaseUrl+"/"+id))
+        {
+            string ApiResponse = await Response.Content.ReadAsStringAsync();
+            userslist = JsonConvert.DeserializeObject<User>(ApiResponse);
+        }
+    }
+     
+    return View(userslist);
+}
+
+15)Click On Details
+Add View
+Razor View
+Click On Add
+ViewName[Details]
+Templet[Details]
+ModelClass[Yourclass name]
+Click On Add
+Then Run The Project
+
+16)For Show The Create
+
+// GET: UserController/Create
+
+public ActionResult Create()
+{
+     return View();
+}
+
+// POST: UserController/Create
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task< ActionResult> Create(User newuser)
+{
+    try
+    {
+        StringContent content = new StringContent(JsonConvert.SerializeObject(newuser), Encoding.UTF8, "application/json");
+        using (var httpClient = new HttpClient())
+        {
+            var response = await httpClient.PostAsync(BaseUrl, content);
+        }
+        return RedirectToAction(nameof(Index));
+    }
+    catch
+    {
+        return View();
+    }
+}
+
+17)Click On Create
+Add View
+Razor View
+Click On Add
+ViewName[Create]
+Templet[Create]
+ModelClass[Yourclass name]
+Click On Add
+Then Run The Project
+
+18)For Edit
+
+// GET: UserController/Edit/5
+
+public async Task<IActionResult> Edit(int id)
+{
+     User userslist = null;
+     using (var httpClient = new HttpClient())
+     {
+          using (var response = await httpClient.GetAsync(BaseUrl + "/" + id))
+          {
+               string apiResponse = await response.Content.ReadAsStringAsync();
+               userslist = JsonConvert.DeserializeObject<User>(apiResponse);
+          }
+    }
+    return View(userslist);
+}
+
+// POST: UserController/Edit/5
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Edit(int id, User userslist)
+{
+    try
+    {
+        StringContent content = new StringContent(JsonConvert.SerializeObject(userslist), Encoding.UTF8, "application/json");
+
+        using (var httpClient = new HttpClient())
+        {
+            var response = await httpClient.PutAsync(BaseUrl + "/" + id, content);
+
+        }
+        return RedirectToAction(nameof(Index));
+    }
+    catch
+    {
+        return View();
+    }
+}
+
+19)Click On Edit
+Add View
+Razor View
+Click On Add
+ViewName[Edit]
+Templet[Edit]
+ModelClass[Yourclass name]
+Click On Add
+Then Run The Project
+
+20)For Delete
+
+// GET: UserController/Delete/5
+public async Task<IActionResult> Delete(int id)
+{
+     User userslist = null;
+     using (var httpClient = new HttpClient())
+     {
+          using (var response = await httpClient.GetAsync(BaseUrl + "/" + id))
+          {
+               string apiResponse = await response.Content.ReadAsStringAsync();
+               userslist = JsonConvert.DeserializeObject<User>(apiResponse);
+         }
+    }
+    return View(userslist);
+}
+
+// POST: UserController/Delete/5
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Delete(int id, IFormCollection collection)
+{
+    try
+    {
+        using (var httpClient = new HttpClient())
+        {
+            var response = await httpClient.DeleteAsync(BaseUrl + "/" + id);
+
+        }
+        return RedirectToAction(nameof(Index));
+    }
+    catch
+    {
+        return View();
+    }
+}
+
+21)Click On Delete
+Add View
+Razor View
+Click On Add
+ViewName[Delete]
+Templet[Delete]
+ModelClass[Yourclass name]
+Click On Add
+Then Run The Project
