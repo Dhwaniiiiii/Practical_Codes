@@ -1,0 +1,374 @@
+1) create database from localhost + foreign key
+// to set foreign key..  goto 2nd table Structure. -> relational view -> any constraint name ;  je common hoi te name means id (column ma) ; 
+
+2) open netbeans.. Services ->
+database - rightclick -> new connection - next
+change database to our name,  set password : root , test connection , finish.
+# open connection jdbc properties -> copy: url & driver calss
+
+3) Services -> Servers -> Payara Server : right click, start ; view domain admin console..
+
+4) Payara Community will open.. GOTO JDBC Connection Pools -> 
+new JDBC Connection Pool  : 
+Pool Name : any pool name (ex. product)
+Resource Type : javax.sql.Driver
+Database Driver Vendor: MySql8
+NEXT...
+
+Driver Classname : com.mysql.cj.jdbc.Driver (paste driver class )
+Properties...
+DatabaseName - dbn
+useSSL - False
+ServerName - localhost
+driverclass , Driver - com.mysql.cj.jdbc.Driver
+Url , URL - jdbc:mysql://localhost:3306/dbn?useSSL=false (paste from url copy)
+username , password - root
+Port - 3306
+Save....   SELECT our Connection pool name then Ping...
+
+=> GOTO JDBC Resources.. -> 
+new : 
+jndi name  : jdbc/any (ex. jdbc/product)
+pool name : select created pool above... (product)
+OK..
+
+5) Create New Project.. 
+File -> New Project -> Java with Maven & Web Application
+give Project name ANY ; version : 1 ; NEXT
+Server : Payara Server ; Java EE Version : Java EE 8 Web  , Finish....
+
+6) in our Project: Other Sources -> src -> meta -> persistence.xml (double click)
+p unit name : ___pu  (ex. productpu)
+data source : select created jandi name.. 
+CTRL S....
+
+7) Project (Right Click) -> New -> Entity Class from Database.. 
+Datasource : select jndi name (ex. jdbc/product) -> Finish
+
+Select our tables Created in  Database.. Add All>>  -> NEXT -> 
+Package :  entity  ; next ; next ;  Finish...
+
+8)  Table.java will create... (ex. Category.java & Product.java)
+For foreign key... add ... after @OneToMany   
+
+>
+   @JsonbTransient
+   
+[je main table hoi ema mukvanu]  [jene foreign key aapi hoi e table](ex. Category)
+
+
+9) Project (Right Click) -> New -> SESSION BEAN ...
+EJB Name : __Bean (ex. categoryBean/productEJB)
+Package : EJB
+select Stateless  - FINISH....
+
+10) code in SESSION BEAN  -> in public class..
+[badhi jagya e ctrl space aapi ne j kam karvuu...] 
+[if error occurs..  click on Bulb and import]
+
+>
+@PersistenceContext(unitName = "productpu")
+EntityManager em;
+
+// called JPA  (atlu karye e up)
+
+[after comment write business logic for CRUD]
+[method che public to space ni aapvani]
+= [publiv void ma.. () ma e table field che  ]
+
+> FOR CATEGORY
+public void addcategory(String catname)  		  // insert
+{
+    Category c = new Category();    	  //  entity name apvu.. 
+    c.setName(catname);
+    em.persist(c);
+}
+public List<Category> getAllCategories()  		// display
+{
+    return em.createNamedQuery("Category.findAll").getResultList();
+}
+public void deletecategory(Integer catid)  		// delete
+{
+    Category c = em.find(Category.class, catid);
+    em.remove(c);
+}
+
+> FOR PRODUCT
+
+ public void addProduct(String pname,Double stock,Integer cid)
+{
+        Category cat=em.find(Category.class, cid);
+        Product p=new Product();
+        p.setProductname(pname);
+        p.setProductstock(stock);
+        p.setCategory(cat);
+        em.persist(p);
+}
+public List<Product> getAllProducts()
+    {
+        return em.createNamedQuery("Product.findAll").getResultList();
+    }
+
+11)  Source Packages -> com.mycompany.projectName.resources (already create hase ema) -> JavaEE8Resource.java
+OR
+RESTful Web Services file (already baneli madse ema) -> JavaEE8Recource-[javaee8]        :  CODE lakhvo...
+
+select all the PUBLIC method from EJB we have created..
+and paste here..Logic delete karvu {} ni aandar nu... 
+@GET wadu portion Delete karvu...
+
+
+[NOTE:  
+Insert -> @POST  , @Path("/product/{pname}/{stock}/{cid}")  ; Delete -> @DELETE , @Path("/category/{cid}") ; 
+Display -> GET , @Produces("application/json")
+    @Path("/categories") ;
+{} ma lakheli fields niche public void ma (@PathParam("field") datatype field   => aam aj lakhase badha mate]
+
+>
+@EJB productEJB ejb;
+    
+    @POST
+    @Path("/category/{cname}")
+    public void addCategory(@PathParam("cname") String catname){
+        ejb.addCategory(catname);
+    }
+    
+    @DELETE
+    @Path("/category/{cid}")
+        public void deletecategory(@PathParam("cid") Integer catid)
+    {
+       ejb.deletecategory(catid);
+    }
+    
+    @POST
+    @Path("/product/{pname}/{stock}/{cid}")
+    public void addProduct(@PathParam("pname") String pname,@PathParam("stock") Double stock,@PathParam("cid") Integer cid){
+       ejb.addProduct(pname, stock, cid);
+    }
+    
+    @GET
+    @Produces("application/json")
+    @Path("/categories")
+    public List<Category> getAllCategories(){
+        return ejb.getAllCategories();
+    }
+    
+    @GET
+    @Produces("application/json")
+    @Path("/products")
+    public List<Product> getAllProducts(){
+        return ejb.getAllProducts();
+    }
+
+
+
+12)  Source Packages / Project (right click) -> New -> 
+Other (search : rest) -> IN Category : WebServices  & File Type : select RESTful Java Client.. -> 
+next -> give Class Name : restClient ; Package : client ; Browse : Select our Project , 
+Expand it & select JavaEE8Resource -> OK ; Finish..
+
+==> RUN:  
+
+// EJB  & JSF
+
+13) Project (right click) -> New -> Other (search : cdi) 
+select JSF CDI Bean....
+Class Name : __Controller  (ex. categoryController)
+Package : Controller
+Scope : Request  FINISH......
+[controller business logic ne connect kare atle banavyu]
+
+// CATEGORY CONTROLLER
+14) in class...
+
+>
+### 1st method...
+@EJB categoryBean cb;     // x2 times import  (bean anavyu hmna upar e)
+String catname;   // je  bean ma method banavya hoi ena name levana..
+RIGHT CLICK -> INSERT CODE -> GETTER-SETTER -> SELECT CATNAME 
+
+GOTO BEAN -> Copy All Method and Paste here...  
+Delete all the logic...
+
+//  public void na () khali kari deva insert ma
+
+ADD   >    cb.addcategory(catname);
+DISPLAY   >     return cb.getallcategory();
+DELETE  >     cb.deletecategory(catid);
+
+// FRONTEND mate nu logic... above 
+####
+
+
+>            ###       2nd method with REST same 1st method follow up just changes in code
+
+restClient rs;
+    Response res;
+    List<Category> cats;
+    String catname;
+    GenericType<List<Category>> gcats;
+    @EJB productEJB cb;
+
+    public productController() {
+        rs=new restClient();
+        cats=new ArrayList<>();
+        gcats=new GenericType<List<Category>>(){};
+    }
+    
+    public void deletecategory(Integer catid)
+    {
+       cb.deletecategory(catid);
+    }
+        
+    public List<Category> getAllCategories(){
+        res=rs.getAllCategories(Response.class);
+        cats=res.readEntity(gcats);
+        return cats;
+        return this.cb.getallcompanybusmaster();
+    }
+    public void addCategory(){
+        rs.addCategory(catname);
+    }
+
+    public String getCatname() {
+        return catname;
+    }
+
+    public void setCatname(String catname) {
+        this.catname = catname;
+    }
+   
+
+// PRODUCT CONTROLLER MANAGE in public class
+
+restClient rs;
+    Response res;
+    List<Product> prods;
+    GenericType<List<Product>> gprods;
+    String pname;
+    String stock;
+    String catid;
+        @EJB productEJB cb;
+
+    /**
+     * Creates a new instance of manageProduct
+     */
+    public manageProduct() {
+        rs = new restClient();
+        prods=new ArrayList<>();
+        gprods=new GenericType<List<Product>>(){};
+    }
+    public void addProduct(){
+        rs.addProduct(pname, stock, catid);
+    }
+    
+           public void deletecategory(Integer catid)
+{
+   cb.deletecategory(catid);
+}
+
+    public List<Product> getAllProducts() {
+        res=rs.getAllProducts(Response.class);
+        prods=res.readEntity(gprods);
+        return prods;
+    }
+   
+       
+    public String getPname() {
+        return pname;
+    }
+
+    public void setPname(String pname) {
+        this.pname = pname;
+    }
+
+    public String getStock() {
+        return stock;
+    }
+
+    public void setStock(String stock) {
+        this.stock = stock;
+    }
+
+    public String getCatid() {
+        return catid;
+    }
+
+    public void setCatid(String catid) {
+        this.catid = catid;
+    }
+    
+
+15) Project (right click) -> New -> Others -> JSF Page. ..
+File Name : manageCategory / CategoryHome
+Finish....
+
+16) Hello from Facelete pachiiii............CategoryHome ma BODY Tag ni andar...
+>
+<h:form>
+            <h:panelGrid columns="2">
+                <h:outputLabel for="name" value="Category Name"/>
+                <h:inputText id="name" value="#{productController.catname}"/>
+            </h:panelGrid>
+            <h:commandButton value="Insert" action="#{productController.addCategory()}"/>
+        </h:form>
+        <h:dataTable value="#{productController.allCategories}" var="c" border="1">
+            <h:column>
+                <f:facet name="header">
+                    <h:outputText value="Name"/>
+                </f:facet>
+                <h:outputText value="#{c.categoryname}"/>
+            </h:column>
+            <h:column>
+                <f:facet name="header">
+                    <h:outputText value="action"></h:outputText>
+                </f:facet>
+                            <h:form>
+                                <h:commandButton value="delete" action="#{manageProduct.deletecategory(c.categoryid)}"></h:commandButton>
+                            </h:form>
+                        </h:column>
+        </h:dataTable>
+
+
+
+// ProductHome ma....
+
+<h:form>
+            <h:panelGrid columns="2">
+                <h:outputLabel for="pname" value="ProductName"/>
+                <h:inputText id="pname" value="#{manageProduct.pname}"/>
+                <h:outputLabel for="stock" value="ProductStock"/>
+                <h:inputText id="stock" value="#{manageProduct.stock}"/>
+                <h:outputLabel for="dept" value="ProductName"/>
+                <h:selectOneMenu id="dept" value="#{manageProduct.catid}">
+                    <f:selectItems value="#{productController.allCategories}" var="c" itemLabel="#{c.categoryname}" itemValue="#{c.categoryid}"/>
+                </h:selectOneMenu>
+            </h:panelGrid>
+            <h:commandButton value="Add" action="#{manageProduct.addProduct()}"/>
+        </h:form>
+        <h:dataTable value="#{manageProduct.allProducts}" var="p" border="1">
+            <h:column>
+                <f:facet name="header">
+                    <h:outputText value="Product Name"/>
+                </f:facet>
+                <h:outputText value="#{p.productname}"/>
+            </h:column>
+            <h:column>
+                <f:facet name="header">
+                    <h:outputText value="Product Stock"/>
+                </f:facet>
+                <h:outputText value="#{p.productstock}"/>
+            </h:column>
+            <h:column>
+                <f:facet name="header">
+                    <h:outputText value="Product Category"/>
+                </f:facet>
+                <h:outputText value="#{p.category.categoryname}"/>
+            </h:column>
+        </h:dataTable>
+
+17) in WEB-INF -> web.xml....
+Welcome file ma : page name.jsf (ex. CategoryHome.jsf)
+Url pattern ma : *.jsf
+
+RUN........
