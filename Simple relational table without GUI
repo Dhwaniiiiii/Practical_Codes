@@ -1,0 +1,118 @@
+New Data (With Core Data)
+
+In Storyboard.. 
+2 button with touch up
+inside named ADD, DELETE
+(view-> show library)
+
+in LHS last dB select : entity page will open
+
+Add Entity -> Add attribute
+Student	sname/sroll/sage
+marks 	sum/s1/s2
+
+in student -> relationship 
++ toMarks ; Marks
+
+in rhs ( relationship  show data model inspector...) 
+
+	delete rule : cascade
+	Type : to many <-  select..
+  entites(lhs) -> codegen :manual/none
+	      (for student & marks)
+
+in marks Entity create relationship
+	to stud ;  student (table)
+
+=> goto main screen (click on database)
+
+Editor menu (pn top) select
+
+Create NSManagedObject subclass..
+
+select our project name  	next
+select entities		next
+			create
+
+=>in view controler :
+
+#import coredata  -- 3
+code in add-btn  -- 4
+
+let appD = UIApplication.shared.delegate as! AppDelegate
+let con = appD.persistentContainer.viewContext
+
+// Student entity object create
+let sobj = Student ( context : con)
+sobj. sroll = 1
+         sname =" Dhwani "
+         sage = 21
+
+// create obj of marks entity
+let mobj 2 = marks (context : con)
+ mobj2.sem = 8
+	s1 = 75
+	s2 = 69
+
+do{
+        try ! con.save()
+        print(" record Inserted...")
+        let dirPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomain Mask,true) 	
+     print (dirpath[0]) 
+}
+
+catch{
+	print("Error")
+}
+
+=> Run Project.
+copy path from debug (delete the /document)
+
+
+=>goto home screen (when pc start & show that screen)
+
+in above GO -> go to folder -> Library -> Application Support -> select our db.
+
+// DISPLAY.. button -> touch up inside.
+
+let appD2= UIApplication.shared.delegate as! AppDelegate
+
+let con2 = appD2.persistentContainer.viewContext
+
+let = NSFetchRequest <Marks>(entityName : "Marks")
+
+do{
+      let result = try ! con2.fetch(fr)
+      for data in result
+    {
+       print (data.sem)
+                        .s1
+	                   .s2
+     }
+}
+
+// In for.. 
+print(data.to stud?.sname ?? "Not Found")
+// same another method + print line add.
+
+
+// DELETE..  button  code....
+
+let appD3= UIApplication.shared.delegate as! AppDelegate
+
+let con3 = appD3.persistentContainer.viewContext
+
+let = NSFetchRequest <Marks>(entityName : "Student")
+
+fr.predicate = NSPredicate(Format : "sname= %@"," Dhwani ")
+
+do{
+       let result = try! con3. fetch(fr)
+       let obj = result [0] as NSManagedObject
+       con3.delete(obj)
+
+do{
+       try! con3.save()
+       print("Record Deleted...." )
+     }
+}
