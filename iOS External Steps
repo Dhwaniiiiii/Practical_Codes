@@ -1,0 +1,372 @@
+1)  CREATE project with CORE DATA
+
+2)  DESIGN kari devi Tables pramane..  + cocoa CLASS Banava
+
+=[ 1st view controller ma ONLY BUTTON =>
+(ex: add_tablename, display_tablename etc) ]
+
+=[ for navigation(back btn) => 
+goto EDITOR MENU -> Embeded in -> navigation controller ]
+
+= [ Biji Screen lavva mate => 
+VIEW -> Show Library -> View Controller (drag to storyboard)  
+++   je name apyu hoi View Controller Class nu te name ne -> right hand side na 4th option ma -> class : select karvu.  ]
+
+= [ Table View Controller Screen lavva mate =>
+ VIEW -> Show Library -> Table View Controller (drag to storyboard)  
+++   je name apyu hoi TableViewController Class nu te name ne ->  right click on TableViewControllerScreen -> drag datasource and delegate to view controller in phone top rectangle    
+++   select tableview screen rectangle controller -> right hand side -> identifier : tableCell (or any name define)  ++   je name apyu hoi TableView Controller Class nu  te name ne -> right hand side na 4th option ma -> class : select karvu.  ]
+
+= [ to Connect ONE SCREEN to ANOTHER =>
+ click button + ctrl + drag to another screen  => SHOW select]
+
+= [ bija View Controller CLASS banava mate => 
+select our file -> right click -> New File => iOS ; Cocoa Touch Class -> next -> name of the class (select UIViewController)-> next -> Create. ]
+[ note:  same badha mate karvanu rese.. jetla class banavya hoi e badha mate. ]
+
+[ class file bani jai atle Storyboard upar aa View Controller na rectangle na viewController upar click karvu... -> right Hand Side pr 4th Option ma Define karvu CLASS: je name class-ViewController nu apyu e  ( to j iboutlet banse )]
+
+= [ Table View Controller CLASS (Data Display karva use) banava mate =>
+ select our file -> right click -> New File => iOS ; Cocoa Touch Class -> next -> name of the class (select UITableViewController) -> next -> Create. ]
+
+= [ If we use PickerView then => right click on pickerview -> drag datasource and delegate to view controller in phone top rectangle  ]
+
+3)  Left hand side INFO ni niche DATABASE -> click  : entity page will open
+ => Add Entity (table name apvu 1st letter Capital )  
+	=> Add attribute (tables ni field lakhvi) - type (datatype apva)
+		-> entites(left hand side click) -> codegen :manual/none (right side pr dekhase change karvu)
+	=> Relationship declare karvi ek bija sathe [ex. toMarks & destination : 2ndtablename & inverse : toTablename]
+		-> in rhs ( relationship  show data model inspector...) 
+		delete rule : cascade
+		Type : to many <-  select..
+
+4)  click on Database => EDITOR menu (on top) select -> CREATE NSManagedObject subclass.. -> select our project name -> next -> select entities -> next -> create .
+[ Note: 4 class create thava joye nito wrong  ; per entity  2 class create thy..  ]
+
+========
+default View Controller ma koi code lakhvo nahi..
+jeni apde design banavi e table na view controller ma code lakhvo....
+
+5)  CODE
+STUDENT VIEW CONTROLLER =>
+
+5.1)  #import coredata
+
+5.2)  badhi fields mate Outlet banava..  button mate Touchup Inside..
+
+5.3)   OVERRIDE  FUNC  CODE : 
+	// aa 2 line database no path lava lakhyu.... 
+	 let path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .allDomainsMask, true)
+        print(path[0])
+
+5.4)  INSERT  BUTTON  CODE : 
+[ NOTE :  for demo student and marks code lakhu chu.. puchai e rite change karvyu]
+	
+	let appD =UIApplication.shared.delegate as! AppDelegate
+	let con =appD.persistentContainer.viewContext
+
+	//   let obj = EntityTableName(context: con)
+	let obj = Stud_master(context: con)
+
+	  //   obj.fieldname = outletname.text!                   // for String values
+	 //   obj.fieldname = Int32(outletname.text!)!     // for Int values
+
+        obj.rollno = Int32(rollno.text!)!
+        obj.name = name.text!
+        obj.div = txtdiv.text!  
+        obj.sem = sem.text!
+        obj.area = area.text!
+        obj.city = city.text!
+        obj.dob = dob.text!
+        obj.bgp = bgp.text!
+        obj.gender = gender.text!
+        
+        do{
+            try! con.save()
+            let alert = UIAlertController(title: "Done", message: "Sucefullly Added Student", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true, completion: nil)
+            
+            print("Successfully Added")
+        }
+
+------
+6) CODE
+MARKS VIEW CONTROLLER => 
+
+6.1)  #import coredata
+
+6.2)  class MarksViewController: UIViewController,UIPickerViewDelegate,UIPickerViewDataSource {
+
+// delegate & dataSource upar ni line ma add karya che ; error avse ; fix karvanu.. atle 2 property jate create thase.. numOfComponent  &  pickerView component  wadu
+
+CODE  :  numOfComponent ma =>
+	 	return 1
+
+CODE  :  pickerView component ma => 
+		return studData.count
+
+6.5)  // niche na 2 function jate create karvana... (titleForRow & didSelectRow)  WHOLE CODE
+
+func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return "Name:\(studData[row].name!)"   // row ma je batavu hoi ena mate lakhvu
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        selectedStudent = studData[row].rollno
+        selectedStud_master = studData[row]
+    }
+
+6.3)  
+var selectedStudent:Int32 = 0
+var selectedStud_master : Stud_master?      //   var selectedTableName : TableName? 
+ var studData:[Stud_master] = []         //   var anyNameData:[tableName] = []  -> array list banavi che aa
+
+6.4)  badhi fields mate Outlet banava (RollNo mate PickerView levu design vakhate j) ..  button mate Touchup Inside..
+
+6.6) Display function banavu... FULL CODE
+
+    func display()
+{
+        let appd = UIApplication.shared.delegate as! AppDelegate
+        let con = appd.persistentContainer.viewContext
+        let  res = NSFetchRequest<Stud_master>(entityName: "Stud_master" )
+        do{
+            
+            studData = try! con.fetch(res)
+        }
+    }
+
+6.6.1)  Call this Display function into OVERRIDE FUNC :
+display()
+
+6.7)   INSERT  BUTTON  CODE :  [for Marks]
+
+ 	let appd = UIApplication.shared.delegate as! AppDelegate
+        let con = appd.persistentContainer.viewContext
+        let marks = Stud_marks(context: con)    //   let marks = EntityTableName(context: con)
+
+        //   marks.fieldname = outletname.text!                   // for String values
+	 //   marks.fieldname = Int32(outletname.text!)!     // for Int values
+
+        marks.div = div.text!
+        marks.es = Int32(es.text!)!
+        marks.rdbms = Int32(rdbms.text!)!
+        marks.micro = Int32(micro.text!)!
+        marks.wd = Int32(wd.text!)!
+        marks.rollno = selectedStudent
+        selectedStud_master?.addToToMarks(marks)    //stud+CoreDataProperties mathi .add wadu avsee...
+        
+        do{
+            try! con.save()
+            let alert = UIAlertController(title: "Done", message: "Sucefullly Added Marks", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true, completion: nil)
+            print("Succefully Added Marks")
+        }catch{
+            print("Error : \(error)")
+        }
+
+-----
+7) CODE
+STUDENT TABLE VIEW CONTROLLER => 
+
+// Ek pn function create athi karvana. comment wada hase pn..
+
+7.1) 
+ var studData:[Stud_master] = []
+    
+    func display()
+{
+        let appd = UIApplication.shared.delegate as! AppDelegate
+        let con = appd.persistentContainer.viewContext
+         
+        let  res = NSFetchRequest<Stud_master>(entityName: "Stud_master" )
+        do{
+            studData = try! con.fetch(res)
+        }
+        
+    }
+
+7.2)  OVERRIDE FUNC  ma => 
+	display()
+
+7.3)  numberOfSections =>
+        return 1
+
+7.4)  numberOfRowsInSection => 
+        return studData.count
+
+7.5)  cellForRowAt indexPath  => // ahi tableCell name step 2 na tableviewcontroller ma identifier ma je lakhyu te ahi lakhvu..
+
+let cell = tableView.dequeueReusableCell(withIdentifier: "tableCell", for: indexPath)
+        cell.textLabel?.text = "Name : \(studData[indexPath.row].name!)     rollno : \(studData[indexPath.row].rollno)"
+        // Configure the cell...
+
+        return cell
+
+7.6)  commit editingStyle:  => // almost badhu bydefault avyu j hase amuk vastu j define karvani rese...
+
+ if editingStyle == .delete {
+            // Delete the row from the data source\
+            
+            let appd = UIApplication.shared.delegate as! AppDelegate
+            let con = appd.persistentContainer.viewContext
+            
+            con.delete(studData[indexPath.row])
+            try! con.save()
+            studData.remove(at: indexPath.row)
+            
+            tableView.deleteRows(at: [indexPath], with: .fade)
+        } else if editingStyle == .insert {
+            
+        }    
+
+8) CODE
+MARKS TABLE VIEW CONTROLLER => 
+
+  var markData:[Stud_marks] = []
+
+    func display(){
+        let appD = UIApplication.shared.delegate as! AppDelegate
+        let con = appD.persistentContainer.viewContext
+        
+        let res = NSFetchRequest<Stud_marks>(entityName: "Stud_marks")
+        do{
+            markData = try! con.fetch(res)
+        }
+    }
+
+
+//  badha function step 7 ma che e rite bani ne j avse.... But comment ma hase... khali code lakhvo.. same copy karye to comment wadu comment aj reva devu
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        display()
+    }
+
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        // #warning Incomplete implementation, return the number of sections
+        return 1
+    }
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        // #warning Incomplete implementation, return the number of rows
+        return markData.count
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "marksidenty", for: indexPath)
+        cell.textLabel?.text = "Name \( markData[indexPath.row].toMaster?.name!)  RDMS  \(markData[indexPath.row].rdbms) ES\(markData[indexPath.row].es)  Mirco\(markData[indexPath.row].micro)  WD\(markData[indexPath.row].wd)"
+        // Configure the cell...
+        return cell
+    }
+
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            let appD = UIApplication.shared.delegate as! AppDelegate
+            let con = appD.persistentContainer.viewContext
+            con.delete(markData[indexPath.row])
+            try! con.save()
+            markData.remove(at: indexPath.row)
+            // Delete the row from the data source
+            tableView.deleteRows(at: [indexPath], with: .fade)
+        } else if editingStyle == .insert {
+            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+        }    
+    }
+
+
+9) RUN Project 
+
+
+10) UPDATE  (do as seen in Delete)
+CODE: 
+
+func updateData() {
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+            
+            let managedContext = appDelegate.persistentContainer.viewContext
+            
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Entity")
+            fetchRequest.predicate = NSPredicate(format: "username = %@", usernametxt.text!)
+            
+            do {
+                let result = try managedContext.fetch(fetchRequest)
+                if let user = result.first as? NSManagedObject {
+                    user.setValue(passwordtxt.text, forKey: "password")
+                    try managedContext.save()
+                    print("Data updated successfully")
+                }
+            } catch {
+                print("Failed to update data")
+            }
+        }
+
+10.1)  call this in override func.
+
+
+11) SEARCH   :
+Create a text field in TableView Screen /
+New Screen take text field & table view (from top Library)
+[ If doing 2nd method: don't forget to connect this to ur view controller (with phone box 1st symbol) and make outlets And connect table view with datasource and delegate ]
+
+Same as STEP 7
+
+11.2) in coding file view controller inside class 
+Create IBOutlet for text field
+
+var filteredData = [String]()
+var filtered= false
+
+11.3) CODE  in Override func  
+table.delegate = self
+table.dataSource = self
+field.delegate = self
+
+11.4) declare in class 
+UITextFieldDelegate{
+
+11.5) after override func.. new func create
+just write & enter below line
+
+textfieldtextdidchange 
+{
+   If let text = textField.text
+{
+   filterText(text+String)
+}
+return true
+}
+
+func filterText(_ query: String)
+{
+filteredData.removeAll()
+for string in data
+{
+if string. lowercased().starts(with: query.lowercased()) 
+{
+filteredData.append(string)
+}
+table.reloadData() 
+filtered = true
+}
+
+11.6)  in numberOfRowsInSection
+
+if !filteredData.isEmpty
+{
+   return filteredData.count
+}
+return filtered ? 0 : data.count
+
+11.7)  in cellForRowAt indexPath
+
+if !filteredData.isEmpty
+{
+cell.textLabel?.text = "Name : \(filteredData[indexPath.row].name!)"
+}
+else
+{
+cell.textLabel?.text = "Name : \(studData[indexPath.row].name!)     rollno : \(studData[indexPath.row].rollno)"
+}
