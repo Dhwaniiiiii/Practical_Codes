@@ -1,0 +1,167 @@
+1) library...
+
+import java.sql.*;
+import javax.swing.table.DefaultTableModel;
+
+
+
+
+
+2) insert...
+
+private void addbuttonActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        
+        Connection con = null;
+        try
+        {
+           Class.forName("com.mysql.cj.jdbc.Driver");
+           con = DriverManager.getConnection("jdbc:mysql://localhost:3306/demoswing1","root","");
+
+
+// service - database(right click)- add new connection - add driver file - next  -  bottom JDBC URL copy == url.
+
+           
+           if(!con.isClosed())
+           {
+               System.out.println("Connection Successful");
+           }
+           
+           Statement st = con.createStatement();
+           
+           int cid = Integer.parseInt(idtxt.getText());
+           String name = nametxt.getText();
+           int bid = Integer.parseInt(bidtxt.getText());
+           int per = Integer.parseInt(pertxt.getText());
+           
+           st.executeUpdate("insert into candidate(candidate_id, name, board_id, percentage) values("+cid+",'"+name+"',"+bid+", "+per+")");
+
+           display();
+           
+        }
+        catch(Exception e)
+        {
+            System.out.println("e.getMessage");
+        }
+        
+    }               
+
+
+
+
+
+
+4) delete.....
+
+same as insert..
+
+int cid = Integer.parseInt(idtxt.getText());
+           
+           st.executeUpdate("delete from candidate where candidate_id = "+cid+" ");
+
+// bs aa 2 field levani
+
+
+
+
+
+
+5) update...
+
+private void editbuttonActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        Connection con = null;
+        try
+        {
+           Class.forName("com.mysql.cj.jdbc.Driver");
+           con = DriverManager.getConnection("jdbc:mysql://localhost:3306/demoswing1","root","");
+           
+           if(!con.isClosed())
+           {
+               System.out.println("Connection Successful");
+           }
+           
+           Statement st = con.createStatement();
+           
+           int cid = Integer.parseInt(idtxt.getText());
+           String name = nametxt.getText();
+           int bid = Integer.parseInt(bidtxt.getText());
+           int per = Integer.parseInt(pertxt.getText());
+           
+           st.executeUpdate("update candidate set name = '"+name+"', board_id = "+bid+", percentage = "+per+" where candidate_id = "+cid+" ");
+
+           display();
+           
+           
+        }
+        catch(Exception e)
+        {
+            System.out.println("e.getMessage");
+        }
+    }        
+
+
+
+
+
+
+
+
+6) display...
+
+public void display()
+    {
+         Connection con = null;
+        try
+        {
+             Class.forName("com.mysql.cj.jdbc.Driver");
+             con = DriverManager.getConnection("jdbc:mysql://localhost:3306/demoswing1","root","");
+             
+             if(!con.isClosed())
+             {
+               System.out.print("connection successfull");
+             }
+             
+              Statement st = con.createStatement();
+              
+              st.executeQuery("SELECT * FROM `candidate` ");
+              
+              ResultSet rs = st.getResultSet();
+              
+              DefaultTableModel tbmodel = (DefaultTableModel)gridview.getModel();
+              
+              tbmodel.setRowCount(0);
+                               
+              while(rs.next())
+              {
+                   String cid = String.valueOf(rs.getString("candidate_id"));
+                   String name = rs.getString("name");
+                   String board = rs.getString("board_id");
+                   String per = String.valueOf(rs.getString("percentage"));
+                   
+                   String tbdata[] = {cid,name,board,per};
+                   
+              
+                   tbmodel.addRow(tbdata);
+              }
+        }
+        catch(Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+
+// same for  SEARCH  query change...
+
+
+
+// call display(); in all functions...
+
+
+// ahi pn call
+
+  public Registration() 
+    {
+        initComponents();
+        display();          // jate lakhvu
+    }
