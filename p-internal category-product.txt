@@ -1,0 +1,175 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
+ */
+package crud1;
+
+
+// 1) library
+
+import java.io.File;
+import java.io.FileWriter;
+import java.util.*;
+import java.sql.*;
+
+/**
+ *
+ * @author CREATIVE INFOTECH
+ */
+public class Crud1 
+{
+    /**
+     * @param args the command line arguments
+     */
+    
+    public static void main(String[] args)
+    {
+        // 2) connection
+        
+        Connection con = null;
+        
+        // 3) class + driver
+        
+        try
+        {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            
+            // 4) connection establish
+            
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/crud1","root","");
+            
+            if(!con.isClosed())
+            {
+                System.out.println("Connection Successfull");
+            }
+            
+            // 5) statement
+            
+            Statement st = con.createStatement();
+            
+            // 6) scanner
+            
+            Scanner sc = new Scanner(System.in);
+                    
+            // 7) table
+                    
+//          st.executeUpdate("create table category(cat_id integer primary key not null auto_increment, cat_name varchar(20))");
+
+//          st.executeUpdate("create table prd(prd_id integer primary key not null auto_increment, prd_name varchar(20),price integer(6), cat_id integer references category)");
+        
+            // 8) menu
+            
+            int choice = 1;
+            
+            do
+            {
+                System.out.println("--MENU--");
+                System.out.println("1. INSERT");
+                System.out.println("2. DELETE");
+                System.out.println("3. UPDATE");
+                System.out.println("4. DISPLAY");
+                System.out.println("5. que 5");
+                System.out.println("0. EXIT");
+                
+                System.out.println("ENTER  CHOICE:  ");
+                
+                choice = sc.nextInt();
+                
+                switch(choice)
+                {
+                    case 1: // insert
+                        
+                        System.out.println("Enter Product Id:");
+                        int prdid1 = sc.nextInt();
+                        
+                        System.out.println("Enter Product Name:");
+                        String prdname1 = sc.next();
+                        
+                        System.out.println("Enter Product Price:");
+                        int prdprice1 = sc.nextInt();
+                        
+                        System.out.println("Enter Category Id:");
+                        int catid1 = sc.nextInt();
+                        
+                        st.executeUpdate("insert into prd(prd_id,prd_name,price,cat_id) values('"+prdid1+"','"+prdname1+"','"+prdprice1+"','"+catid1+"')");
+                        
+                        break;
+                        
+                    case 2: // delete
+                        
+                        System.out.println("Enter Product ID which you want to Delete: ");
+                        int prdid2 = sc.nextInt();
+                        
+                        st.executeUpdate("delete from prd where prd_id = '"+prdid2+"' ");
+                        break;
+                        
+                    case 3: // update
+                        
+                        System.out.println("Enter product id which u want to update");
+                        int prdid3 = sc.nextInt();
+                        
+                        System.out.println("Enter new product name");
+                        String prdname2 = sc.next();
+                        
+                        System.out.println("Enter Product Price:");
+                        int prdprice2 = sc.nextInt();
+                        
+                        System.out.println("Enter Category Id:");
+                        int catid2 = sc.nextInt();
+                        
+                        st.executeUpdate("update prd set prd_name = '"+prdname2+"', price = '"+prdprice2+"', cat_id = '"+catid2+"' where prd_id = '"+prdid3+"' ");
+                        
+                        break;
+                    
+                    case 4: // display
+                        
+                        st.executeQuery("select prd_id, prd_name, price, c.cat_id, cat_name from prd p, category c where c.cat_id = p.cat_id \n\n");
+                        
+                        ResultSet rs = st.getResultSet();
+                        
+                        while(rs.next())
+                        {
+                            int prdid4 = rs.getInt("prd_id");
+                            String prdname3 = rs.getString("prd_name");
+                            int prdprice3 = rs.getInt("price");
+                            int catid3 = rs.getInt("cat_id");
+                            
+                            System.out.println("prd_id = " +prdid4+ "  prd_name = " +prdname3+ "  price = " +prdprice3+ "  cat_id = " +catid3);
+                            
+                        }
+                        break;
+                        
+                    case 5:
+                        
+                        File f = new File("student.txt");
+                        f.createNewFile();
+                        FileWriter fr = new FileWriter(f);
+                        st.executeQuery("select * from prd");
+                        ResultSet rs1 = st.getResultSet();
+                        while(rs1.next())
+                        {
+                            int prdid5 = rs1.getInt("prd_id");
+                            String prdname4 = rs1.getString("prd_name");
+                            int prdprice4 = rs1.getInt("price");
+                            int catid4 = rs1.getInt("cat_id");
+                            
+                            fr.write("prd_id = " +prdid5+ "  prd_name = " +prdname4+ "  price = " +prdprice4+ "  cat_id = " +catid4);
+                        }
+                        fr.close();
+                        break;
+                        
+                }
+            } 
+            
+            while(choice!=0);
+            
+            
+        }
+        catch(Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+        
+    }
+    
+}
