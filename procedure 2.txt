@@ -1,0 +1,210 @@
+ 
+	BANK ACCOUNT
+------------------------
+
+create table Branch_Master
+(
+BranchID integer primary key,
+BranchName varchar2(20)
+)
+
+begin
+insert into Branch_Master values(101,'vesu');
+insert into Branch_Master values(201,'adajan');
+insert into Branch_Master values(301,'nanpura');
+insert into Branch_Master values(401,'varacha');
+end;
+/
+------------------------
+
+create table Account_Type_Master_Table
+(
+AccountTypeID integer primary key,
+AccountTypeName varchar2(20)
+
+)
+
+Note: AccountTypeName can be “Savings”, “Current”, “JanDhan”, “Women”
+
+
+begin
+insert into Account_Type_Master_Table values(11, 'savings');
+insert into Account_Type_Master_Table values(12, 'current');
+insert into Account_Type_Master_Table values(13, 'jandhan');
+insert into Account_Type_Master_Table values(14, 'women');
+end;
+/
+
+------------------------
+
+create table Account_Master
+(
+AccountNumber integer primary key,
+AccountHolderName varchar2(20),
+BirthDate date,
+AccountBalance number(6),
+BranchID references Branch_Master,
+AccountTypeID references Account_Type_Master_Table
+)
+
+
+begin
+insert into Account_Master values(1, 'dhwani', '05-apr-2002', 35000, 101, 13);
+insert into Account_Master values(2, 'sanskar', '29-apr-2001', 45000, 401, 12);
+insert into Account_Master values(3, 'parth', '12-nov-2001', 47000, 201, 12);
+insert into Account_Master values(4, 'pratham', '31-aug-2002', 36000, 201, 11);
+insert into Account_Master values(5, 'sakshi', '17-apr-2002', 32000, 301, 14);
+insert into Account_Master values(6, 'shubh', '12-nov-2002', 35000, 101, 13);
+end;
+/
+
+
+  Q1
+ Create a procedure to get all account holders’ information for a particular branch name.
+For example,
+Input: Branch Name (Nanpura)
+Output: All account holders’ information of particular branch (Nanpura)
+
+--
+CREATE OR REPLACE PROCEDURE totalAcc(Branch Branch_Master.BranchName%TYPE)
+AS
+Count Number;
+
+begin
+select count(*) into Count from Account_Master where BranchID=(select BranchID from Branch_Master where BranchName = Branch);
+
+DBMS_OUTPUT.PUT_LINE('Total count of vesu branch : ' || Count);
+DBMS_OUTPUT.PUT_LINE(' ');
+end;
+/
+
+execute totalAcc('napura');   
+
+-------------------
+
+Q2
+ Create a procedure to get all account holders’ information by a particular account type and balance in the account.
+For example
+Input: (“JanDhan”, 1000, 3000)
+Output: All account holders’ information of particular account type and balance in
+specified range.
+
+
+-------------------
+
+Q3
+ Create a procedure to get total count of accounts in a particular branch.
+
+For example
+Input: (“vesu”)
+Output: total count of vesu branch
+
+--
+   
+CREATE OR REPLACE PROCEDURE totalAcc(Branch Branch_Master.BranchName%TYPE)
+AS
+vCount Number;
+
+begin
+select count(*) into vCount from Account_Master where BranchID=(SELECT BranchID from Branch_Master where BranchName = Branch);
+
+DBMS_OUTPUT.PUT_LINE('Total count of vesu branch : ' || vCount);
+DBMS_OUTPUT.PUT_LINE(' ');
+end;
+/
+
+-- op
+{
+Procedure created.
+}
+
+execute totalAcc('vesu');
+
+-- op
+{
+Total count of vesu branch : 2
+PL/SQL procedure successfully completed.
+}
+
+-------------------
+
+Q4
+ Create a procedure to get total count of accounts of each branch.
+For example
+Output: branch and total count of that branch
+
+--
+
+CREATE OR REPLACE PROCEDURE totalacc
+()
+AS
+select count(AccountNumber) from Account_Master where BranchID = '';
+
+-------------------
+
+Q5
+ Create a procedure to get total balance of all accounts in a particular branch.
+For example
+Input: (“vesu”)
+Output: total balance of vesu branch
+
+--
+
+CREATE OR REPLACE PROCEDURE totalBalance(Branch Branch_Master.BranchName%TYPE)
+AS
+vCount Number;
+
+BEGIN
+SELECT SUM(AccountBalance) into vCount from Account_Master where BranchID in (SELECT BranchID from Branch_Master where BranchName = Branch);
+
+DBMS_OUTPUT.PUT_LINE('Total balance of vesu branch : ' || ' ' || vCount);
+END;
+/
+
+-- op
+{
+Procedure created.
+}
+
+execute totalBalance('NANPURA');
+
+-- op
+{
+Total balance of vesu branch :
+PL/SQL procedure successfully completed.
+}
+
+-------------------
+
+Q6
+ Create a procedure to get average balance of all accounts
+in a particular branch.
+For example
+Input: (“vesu”)
+Output: average balance of vesu branch
+
+--
+
+CREATE OR REPLACE PROCEDURE AvgBalance(Branch Branch_Master.BranchName%TYPE)
+AS
+vCount Number;
+
+begin
+select AVG(AccountBalance) into vCount FROM Account_Master WHERE BranchID=(SELECT BranchID FROM Branch_Master WHERE BranchName = Branch);
+
+DBMS_OUTPUT.PUT_LINE('Average balance of vesu branch : '|| ' ' ||vCount);
+end;
+/
+
+-- op
+{
+Procedure created.
+}
+
+execute AvgBalance('vesu');
+
+-- op
+{
+Average balance of vesu branch :  35000
+PL/SQL procedure successfully completed.
+}

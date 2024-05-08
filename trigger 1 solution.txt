@@ -1,0 +1,237 @@
+CREATE TABLE EMP
+(EMPID Number,
+ENAME Varchar2(4000),
+BASIC Number,
+DA Number,
+GROSS Number)
+
+
+1) Calculate Gross Salary automatically using Trigger. (Basic + DA)
+
+CREATE TABLE TBL_AUDIT_EMP (
+    EMPID NUMBER,
+    ENAME Varchar2(4000),
+    NEWBASIC Number,
+    NEWDA NUMBER,
+    NEWGROSS Number,
+    OLDBASIC Number,
+    OLDDA NUMBER,
+    OLDGROSS Number,
+    DMLTYPE VARCHAR2(40),
+    DMLDATE DATE)
+
+
+2) Create Trigger to track all DML operations on Emp Table.
+
+
+
+syntax =>
+
+CREATE OR REPLACE TRIGGER trigger_name
+{BEFORE | AFTER} Triggering_event ON table_name
+FOR EACH ROW [FOLLOWS another_trigger_name]
+[ENABLE/DISABLE][WHEN CONDITION]
+DECLARE
+	declaration statement
+BEGIN
+	executable statements
+END;
+
+
+-- learn syntax from here
+
+https://youtu.be/R3fvX_xf5P4   
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+--
+
+CREATE TABLE EMP
+(
+EMPID Number,
+ENAME Varchar2(4000),
+BASIC Number,
+DA Number,
+GROSS Number
+);
+
+-- op
+{
+Table created.
+}
+
+
+--
+
+1) Calculate Gross Salary automatically using Trigger.
+ (Basic + DA)
+
+
+-- create trigger
+
+CREATE OR REPLACE TRIGGER gross_insert_on_emp
+BEFORE INSERT OR UPDATE ON EMP
+FOR EACH ROW
+BEGIN
+:NEW.GROSS:=(:NEW.BASIC + :NEW.DA);
+END;
+/
+
+-- op
+{
+Trigger created.
+}
+
+
+-- use trigger
+
+BEGIN
+INSERT INTO EMP(EMPID, ENAME, BASIC, DA, GROSS) VALUES(2,'HI',100,100,NULL);
+
+INSERT INTO EMP(EMPID, ENAME, BASIC, DA) VALUES(1,'DHWANI',5000,2000);
+INSERT INTO EMP(EMPID, ENAME, BASIC, DA) VALUES(1,'MANAN',90000,22000);
+INSERT INTO EMP(EMPID, ENAME, BASIC, DA) VALUES(3,'KEYUR',6000,3000);
+END;
+/
+
+-- op
+{
+PL/SQL procedure successfully completed.
+}
+
+
+-- check 
+
+SELECT * FROM EMP ;
+
+
+-- op
+{
+
+     EMPID
+----------
+ENAME
+--------------------------------------------------------------------------------
+     BASIC         DA      GROSS
+---------- ---------- ----------
+         1
+DHWANI
+      5000       2000       7000
+
+         1
+MANAN
+     90000      22000     112000
+         3
+KEYUR
+     6000       3000       9000
+
+}
+
+
+
+-------------
+-- meaning --
+-------------
+
+CREATE OR REPLACE TRIGGER insert_emp
+{ trigger + name banavyu}
+BEFORE INSERT OR UPDATE ON EMP
+{ EMP table ma insert k update karya phela}
+FOR EACH ROW
+{ darek row mate}
+BEGIN
+  :NEW.GROSS:=(:NEW.BASIC + :NEW.DA);
+{ new basic ane new da both ni value add thy new gross ma levi}
+END;
+--
+
+INSERT INTO EMP(EMPID, ENAME, BASIC, DA) VALUES(1,'Jaydev',25000,5000);
+{EMP table ma gross sivai ni value insert kari run karva thi automatic trigger run thy jase atle k gross avi jase add thy ne}
+
+##########################################
+
+CREATE TABLE TBL_AUDIT_EMP
+(
+    EMPID NUMBER,
+    ENAME Varchar2(4000),
+    NEWBASIC Number,
+    NEWDA NUMBER,
+    NEWGROSS Number,
+    OLDBASIC Number,
+    OLDDA NUMBER,
+    OLDGROSS Number,
+    DMLTYPE VARCHAR2(40),
+    DMLDATE DATE
+);
+
+-- op
+{
+Table created.
+}
+
+-- 
+
+2) Create Trigger to track all DML operations on Emp Table.
+
+
+-- trigger for DML operation
+
+CREATE OR REPLACE TRIGGER AUDIT_DML_EMP
+AFTER INSERT OR DELETE OR UPDATE ON EMP
+FOR EACH ROW
+BEGIN
+
+IF INSERTING THEN
+INSERT INTO TBL_AUDIT_EMP(EMPID,ENAME,NEWBASIC,NEWDA,NEWGROSS,DMLTYPE,DMLDATE) 
+VALUES
+(:NEW.EMPID, :NEW.ENAME, :NEW.BASIC, :NEW.DA, :NEW.GROSS, 'INSERT',SYSDATE);
+
+ELSIF DELETING THEN
+INSERT INTO TBL_AUDIT_EMP(EMPID,ENAME,NEWBASIC,NEWDA,NEWGROSS,DMLTYPE,DMLDATE) 
+VALUES
+(:OLD.EMPID, :OLD.ENAME, :OLD.BASIC, :OLD.DA, :OLD.GROSS, 'DELETE',SYSDATE);
+
+ELSIF UPDATING THEN
+INSERT INTO TBL_AUDIT_EMP VALUES
+(:NEW.EMPID, :NEW.ENAME, :NEW.BASIC, :NEW.DA, :NEW.GROSS,:OLD.BASIC,:OLD.DA, :OLD.GROSS,'UPDATE',SYSDATE);
+
+END IF;
+END;
+/
+
+
+-- op
+{
+Trigger created.
+}
+
+
+INSERT INTO EMP(EMPID, ENAME, BASIC, DA) VALUES(1,'Dev',15000,3000);
+
+-- op
+{
+1 row created.
+}
+
+
+UPDATE EMP SET BASIC = 25000, DA = 5000 WHERE EMPID = 1 ;
+
+-- op
+{
+3 rows updated.
+}
+
+
+DELETE FROM EMP WHERE EMPID = 3 ;
+
+-- op
+{
+1 row deleted.
+}
+
+
+select * from TBL_AUDIT_EMP;
+
+-------------
+-- meaning --
+-------------

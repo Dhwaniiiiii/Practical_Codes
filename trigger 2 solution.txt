@@ -1,0 +1,210 @@
+The SYNTAX for creating a TRIGGER is −
+
+CREATE [OR REPLACE ] TRIGGER trigger_name  
+{BEFORE | AFTER | INSTEAD OF }  
+{INSERT [OR] | UPDATE [OR] | DELETE}  
+[OF col_name]  
+ON table_name  
+[REFERENCING OLD AS o NEW AS n]  
+[FOR EACH ROW]  
+WHEN (condition)   
+DECLARE 
+   Declaration-statements 
+BEGIN  
+   Executable-statements 
+EXCEPTION 
+   Exception-handling-statements 
+END; 
+
+****************************************************
+
+
+create table Category_Master_Table
+(
+CategoryID integer primary key,
+CategoryName varchar2(20)
+);
+
+
+-- op
+{
+Table created.
+}
+
+
+
+begin
+INSERT INTO Category_Master_Table VALUES(1,'Men');
+INSERT INTO Category_Master_Table VALUES(2,'Women');
+INSERT INTO Category_Master_Table VALUES(3,'Child');
+INSERT INTO Category_Master_Table VALUES(4,'Adult');
+INSERT INTO Category_Master_Table VALUES(5,'Formal');
+end;
+/
+
+
+-- op
+{
+PL/SQL procedure successfully completed.
+}
+
+
+#################
+
+
+create table Item_Master_Table
+(
+Item_Code varchar(5) primary key,
+Item_Name varchar(35),
+Item_Price integer,
+Item_QTY integer,
+CategoryID integer
+);
+
+
+-- op
+{
+Table created.
+}
+
+
+begin
+INSERT INTO Item_Master_Table VALUES
+('I1','DENIM-SHIRT',460,2,1);
+INSERT INTO Item_Master_Table VALUES
+('I2','T-SHIRT',350,5,2);
+INSERT INTO Item_Master_Table VALUES
+('I3','DENIM-JACKET',1500,1,1);
+INSERT INTO Item_Master_Table VALUES
+('I4','DENIM-JACKET',440,1,4);
+INSERT INTO Item_Master_Table VALUES
+('I5','HOODIE',780,2,4);
+end;
+/
+
+-- op
+{
+PL/SQL procedure successfully completed.
+}
+
+
+###
+
+
+
+-- see table valu
+SELECT * FROM Category_Master_Table;
+
+-- op
+{
+
+CATEGORYID CATEGORYNAME
+---------- --------------------
+         1 Men
+         2 Women
+         3 Child
+         4 Adult
+         5 Formal
+
+}
+
+
+
+SELECT * FROM Item_Master_Table;
+
+
+-- op
+{
+
+
+ITEM_ ITEM_NAME                           ITEM_PRICE   ITEM_QTY CATEGORYID
+----- ----------------------------------- ---------- ---------- ----------
+I1    DENIM-SHIRT                                460          2          1
+I2    T-SHIRT                                    350          5          2
+I3    DENIM-JACKET                              1500          1          1
+I4    DENIM-JACKET                               440          1          4
+I5    HOODIE                                     780          2          4
+
+}
+
+
+****************************************************
+
+--- Que
+Create a Trigger that will delete all items from the Item Master Table when related Category is deleted from the Category Master Table.
+
+--
+
+CREATE OR REPLACE TRIGGER delete_item_on_category_delete
+BEFORE DELETE ON Category_Master_Table
+FOR EACH ROW
+BEGIN
+DELETE FROM Item_Master_Table WHERE CategoryID = :OLD.CategoryID;
+END;
+/
+
+
+-- op
+{
+Trigger created.
+}
+
+
+-- use trigger
+
+BEGIN
+DELETE FROM Category_Master_Table WHERE CategoryiID = 1;
+END;
+/
+
+-- op
+{
+PL/SQL procedure successfully completed.
+}
+
+
+-- check
+
+SELECT * FROM Item_Master_Table;
+
+
+
+
+
+-------------
+-- meaning --
+-------------
+
+CREATE OR REPLACE TRIGGER delete_item_on_category_delete
+{ trigger + name banavyu}
+BEFORE DELETE ON Category_Master_Table
+{ category master mathi delete karya phela}
+FOR EACH ROW
+{ darek row mate}
+BEGIN
+DELETE FROM Item_Master_Table WHERE CategoryID = :OLD.CategoryID;
+{ item master ma jya category id ma juni id ni value che tene delete karvi}
+END;
+/
+--
+
+BEGIN
+DELETE FROM Category_Master_Table WHERE CategoryName = 'Adult';
+END;
+/
+--
+
+more explaination....b n
+
+
+jyare Category Master Table mathi koi ekk id/name delete karva ma ave to tyre 
+ Item Master Table mathi delete karva ma aaveli id wado record pn delete thavo joye..
+
+trigger banava thi Item Master Table na data ne vare vare delete karvani jarur nathi padti.
+
+Category Master Table ma changes karva thi aapo aap changes bija table ma thy aj jase.
+
+
+
+
+

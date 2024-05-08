@@ -1,0 +1,835 @@
+-- TABLE CREATION 
+
+CREATE TABLE StudentMeritTable(
+FormNumber integer primary key,	
+ExamNumber number,	
+StudentName varchar2(30),	
+Stream varchar2(20) CHECK(stream in ('SCIENCE','COMMERCE','VOCATIONALAL')),
+Category varchar2(20)	CHECK (category in('OPEN','SC','ST','SEBC')),
+NoofAttempt number,	
+TotalMark number,	
+TotalMarksObtained number,	
+Percentage number,	
+MeritPercentage number,	
+Board varchar2(20),
+REGION varchar2(20)
+);
+
+-- 
+Table created.
+}
+
+
+CREATE TABLE ADMISSIONCONFIRMATIONTABLE(
+FormNumber integer primary key,
+ExamNumber number,
+StudentName varchar2(30),	
+Stream varchar2(20) CHECK(stream in ('SCIENCE','COMMERCE','VOCATIONALAL')),
+Category varchar2(20)	CHECK (category in('OPEN','SC','ST','SEBC')),
+NoofAttempt number,	
+TotalMark number,	
+TotalMarksObtained number,	
+Percentage number,	
+MeritPercentage number,	
+AdmissionDate date
+);
+
+-- op
+{
+Table created.
+}
+
+
+
+-- QUERY 1
+
+Q1) 
+Create a procedure to insert new record in StudentMeritTable. Calculate Percentage and merit Percentage automatically in StudentMeritTable.
+
+--
+
+CREATE OR REPLACE PROCEDURE INSERT_STU_MERIT_DATA(
+FNUMBER StudentMeritTable.FormNumber%TYPE,
+ENUMBER StudentMeritTable.ExamNumber%TYPE,
+SNAME StudentMeritTable.StudentName%TYPE,
+STM StudentMeritTable.Stream%TYPE,
+CAT StudentMeritTable.Category%TYPE,
+ATTEMPT StudentMeritTable.NoofAttempt%TYPE,
+TMARK StudentMeritTable.TotalMark%TYPE,
+TotalMarksObtained StudentMeritTable.TotalMarksObtained%TYPE,
+BRD StudentMeritTable.Board%TYPE,
+RGN StudentMeritTable.REGION%TYPE
+)
+AS
+PER NUMBER;
+MERITPER NUMBER;
+BEGIN
+PER := (TotalMarksObtained/TMARK)*100;
+IF ATTEMPT = 1 THEN
+MERITPER := PER;
+ELSIF ATTEMPT = 2 THEN
+MERITPER := PER - 2;
+ELSIF ATTEMPT = 3 THEN
+MERITPER := PER - 4;
+ELSIF ATTEMPT >= 4 THEN
+MERITPER := PER - 6;
+END IF;
+
+INSERT INTO StudentMeritTable VALUES(FNUMBER,ENUMBER,SNAME,STM,CAT,ATTEMPT,TMARK,TotalMarksObtained,PER,MERITPER,BRD,RGN);
+DBMS_OUTPUT.PUT_LINE(' ');
+DBMS_OUTPUT.PUT_LINE('DATA INSERTED SUCCESSFULLY');
+END;
+/
+
+-- OP
+{
+Procedure created.
+}
+
+BEGIN
+INSERT_STU_MERIT_DATA(1001,10001,'DHWANI','COMMERCE','SEBC',1,700,600,'GSEB','VNSGU');
+END;
+/
+
+-- op
+{
+DATA INSERTED SUCCESSFULLY
+
+PL/SQL procedure successfully completed.
+}
+
+
+
+BEGIN
+INSERT_STU_MERIT_DATA
+(1002, 10002,'nihar','COMMERCE','SEBC',1,700,620,'GSEB','VNSGU');
+INSERT_STU_MERIT_DATA
+(1003, 10003,'hinal','SCIENCE','ST',1,700,469,'GSEB','VNSGU');
+INSERT_STU_MERIT_DATA
+(1004, 10004,'sakshi','SCIENCE','SEBC',1,700,570,'GSEB','VNSGU');
+INSERT_STU_MERIT_DATA
+(1005, 10005, 'hemangi','COMMERCE','SEBC',1,700,640,'GSEB','VNSGU');
+INSERT_STU_MERIT_DATA
+(1006, 10006,'kruti','COMMERCE','OPEN',1,700,400,'GSEB','VNSGU');
+INSERT_STU_MERIT_DATA
+(1007,10007,'swaleh','COMMERCE','OPEN',2,700,435,'GSEB','VNSGU');
+INSERT_STU_MERIT_DATA
+(1008, 10008,'naveen','SCIENCE','SC',1,700,597,'GSEB','VNSGU');
+INSERT_STU_MERIT_DATA
+(1009, 10009,'dev','SCIENCE','ST',1,700,586,'GSEB','VNSGU');
+INSERT_STU_MERIT_DATA
+(1010, 10010,'neha','COMMERCE','SC',2,700,486,'GSEB','VNSGU');
+END;
+/
+
+-- op
+{
+DATA INSERTED SUCCESSFULLY
+DATA INSERTED SUCCESSFULLY
+DATA INSERTED SUCCESSFULLY
+DATA INSERTED SUCCESSFULLY
+DATA INSERTED SUCCESSFULLY
+DATA INSERTED SUCCESSFULLY
+DATA INSERTED SUCCESSFULLY
+DATA INSERTED SUCCESSFULLY
+DATA INSERTED SUCCESSFULLY
+
+PL/SQL procedure successfully completed.
+}
+
+
+
+-----------------------
+
+Q2) 
+Write a pl/sql Procedure that will allot admission based on Stream, Category, Board, Region and Count.
+
+For example, allot 39 admission for Science Stream, Open Category, GSEB Board and VNSGU Region (Top 39 candidates).
+•	giveAdm(‘Science’,’Open’,’GSEB’,’VNSGU’,37);
+•	giveAdm(‘Commerce’,’Open’,’GSEB’,’VNSGU’,7);
+•	giveAdm(‘Science’,’SEBC’,’GSEB’,’VNSGU’,11);
+It means, procedure will have 5 IN parameters, 
+•	Stream
+•	Category
+•	Board
+•	Region
+•	Count
+
+Note: 
+1) Add records in Admission Confirmation Table
+2) Delete those records from Student Merit Table.
+
+--
+
+CREATE OR REPLACE PROCEDURE GIVEADM(
+STR StudentMeritTable.Stream%TYPE,
+CAT StudentMeritTable.Category%TYPE,
+BRD StudentMeritTable.Board%TYPE,
+RGN StudentMeritTable.REGION%TYPE,
+SIT NUMBER
+)
+AS
+STUD_INFO StudentMeritTable%ROWTYPE;
+S_LOOP NUMBER := 1;
+
+CURSOR STUD_ADM IS SELECT * FROM StudentMeritTable WHERE Stream = STR AND Category = CAT AND Board = BRD AND REGION = RGN ORDER BY MeritPercentage DESC;
+
+BEGIN
+OPEN STUD_ADM;
+WHILE S_LOOP <= SIT LOOP
+FETCH STUD_ADM INTO STUD_INFO;
+
+--INSERT INTO ADMISSION TABLE
+INSERT INTO ADMISSIONCONFIRMATIONTABLE VALUES(STUD_INFO.FormNumber,STUD_INFO.ExamNumber,STUD_INFO.StudentName,STUD_INFO.Stream,STUD_INFO.Category,STUD_INFO.NoofAttempt,STUD_INFO.TotalMark,STUD_INFO.TotalMarksObtained,STUD_INFO.Percentage,STUD_INFO.MeritPercentage,SYSDATE,STUD_INFO.Board,STUD_INFO.REGION);
+
+--DELETE FROM MERIT TABLE
+DELETE FROM StudentMeritTable WHERE FormNumber = STUD_INFO.FormNumber;
+
+S_LOOP := S_LOOP + 1;
+END LOOP;
+DBMS_OUTPUT.PUT_LINE('ADMISSION GIVEN SUCCESSFULLY TO GIVEN Stream AND Category STUDENTS');
+DBMS_OUTPUT.PUT_LINE(' ');
+
+EXCEPTION
+WHEN OTHERS THEN
+IF (SIT = 1) THEN
+DBMS_OUTPUT.PUT_LINE('THERE IS NO STUDENT APPLY');
+DBMS_OUTPUT.PUT_LINE(' ');
+ELSE
+DBMS_OUTPUT.PUT_LINE('STUDENTS ARE LESS THAN ALLOCATE SIT PLEASE ENTER CANDIDATE COUNT LESS THEN ' || SIT);
+DBMS_OUTPUT.PUT_LINE(' ');
+END IF;
+
+END;
+/
+
+-- op
+{
+Warning: Procedure created with compilation errors.
+}
+
+
+EXECUTE GIVEADM('SCIENCE','SC','GSEB','VNSGU',1);
+
+-----------------------
+Q3) 
+Write a procedure to give admission to specific candidate
+
+--
+
+CREATE OR REPLACE PROCEDURE SINGLE_STUD_ADM(
+FNUMBER StudentMeritTable.FormNumber%TYPE
+)
+AS
+STUD_INFO StudentMeritTable%ROWTYPE;
+BEGIN
+SELECT * INTO STUD_INFO FROM StudentMeritTable WHERE FormNumber = FNUMBER;
+
+--INSERT INTO ADMISSION TABLE
+INSERT INTO ADMISSIONCONFIRMATIONTABLE VALUES(STUD_INFO.FormNumber,STUD_INFO.ExamNumber,STUD_INFO.StudentName,STUD_INFO.Stream,STUD_INFO.Category,STUD_INFO.NoofAttempt,STUD_INFO.TotalMark,STUD_INFO.TotalMarksObtained,STUD_INFO.Percentage,STUD_INFO.MeritPercentage,SYSDATE);
+
+--DELETE FROM MERIT TABLE
+DELETE FROM StudentMeritTable WHERE FormNumber = STUD_INFO.FormNumber;
+
+DBMS_OUTPUT.PUT_LINE('ADMISSION GIVEN SUCCESSFULLY TO STUDENT');
+DBMS_OUTPUT.PUT_LINE(' ');
+
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+DBMS_OUTPUT.PUT_LINE('NO SUCH STUDENT EXIST');
+DBMS_OUTPUT.PUT_LINE(' ');
+END;
+/
+
+-- op
+{
+Procedure created.
+}
+
+
+BEGIN
+SINGLE_STUD_ADM(1001);
+END;
+/
+
+-- op
+{
+ADMISSION GIVEN SUCCESSFULLY TO STUDENT
+
+PL/SQL procedure successfully completed.
+}
+
+-----------------------
+Q4) 
+Write a procedure to cancel a specific admission.
+
+--
+
+CREATE OR REPLACE PROCEDURE SINGLE_STUD_ADM(
+FNUMBER StudentMeritTable.FormNumber%TYPE
+)
+AS
+STUD_INFO ADMISSIONCONFIRMATIONTABLE%ROWTYPE;
+BEGIN
+SELECT * INTO STUD_INFO FROM ADMISSIONCONFIRMATIONTABLE WHERE FormNumber = FNUMBER;
+
+--delete from admission table
+DELETE FROM ADMISSIONCONFIRMATIONTABLE WHERE FormNumber = FNUMBER;
+DBMS_OUTPUT.PUT_LINE('ADMISSION CANCEL SUCCESSFULLY');
+DBMS_OUTPUT.PUT_LINE(' ');
+
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+DBMS_OUTPUT.PUT_LINE('NO SUCH STUDENT EXIST');
+DBMS_OUTPUT.PUT_LINE(' ');
+END;
+/
+
+-- op
+{
+Procedure created.
+}
+
+
+EXECUTE SINGLE_STUD_ADM(1001);
+
+-- op
+{
+ADMISSION CANCEL SUCCESSFULLY
+
+PL/SQL procedure successfully completed.
+}
+
+
+
+
+-----------------------
+Q5) 
+Write a procedure to provide admission information for a particular duration.
+For example, admission given during 1-10-2020 to 5-10-2020
+
+--
+
+CREATE OR REPLACE PROCEDURE GET_ADM_INFO_BET_DATE(
+S_DATE DATE,
+E_DATE DATE
+)
+AS
+I NUMBER := 0;
+NO_DATA EXCEPTION;
+ADM_STUD_INFO ADMISSIONCONFIRMATIONTABLE%ROWTYPE;
+
+CURSOR ADM_INFO IS SELECT * FROM ADMISSIONCONFIRMATIONTABLE WHERE AdmissionDate >= S_DATE AND AdmissionDate <= E_DATE;
+
+BEGIN
+OPEN ADM_INFO;
+LOOP
+FETCH ADM_INFO INTO ADM_STUD_INFO;
+EXIT WHEN ADM_INFO%NOTFOUND;
+I := I + 1;
+DBMS_OUTPUT.PUT_LINE('FORM NUMBER IS : ' || ADM_STUD_INFO.FormNumber);
+DBMS_OUTPUT.PUT_LINE('EXAM NUMBER IS : ' || ADM_STUD_INFO.ExamNumber);
+DBMS_OUTPUT.PUT_LINE('STUDENT NAME : ' || ADM_STUD_INFO.StudentName);
+DBMS_OUTPUT.PUT_LINE('Stream : ' || ADM_STUD_INFO.Stream);
+DBMS_OUTPUT.PUT_LINE('Category : ' || ADM_STUD_INFO.Category);
+DBMS_OUTPUT.PUT_LINE('NO OF ATTEMPT IS : ' || ADM_STUD_INFO.NoofAttempt);
+DBMS_OUTPUT.PUT_LINE('TOTAL MARKS IS : ' || ADM_STUD_INFO.TotalMark);
+DBMS_OUTPUT.PUT_LINE('OBTAIN MARKS IS : ' || ADM_STUD_INFO.TotalMarksObtained);
+DBMS_OUTPUT.PUT_LINE('Percentage IS : ' || ADM_STUD_INFO.Percentage);
+DBMS_OUTPUT.PUT_LINE('MERIT Percentage IS : ' || ADM_STUD_INFO.MeritPercentage);
+DBMS_OUTPUT.PUT_LINE('ADMISSION DATE IS : ' || ADM_STUD_INFO.AdmissionDate);
+DBMS_OUTPUT.PUT_LINE('Board IS : ' || ADM_STUD_INFO.Board);
+DBMS_OUTPUT.PUT_LINE('REGION IS : ' || ADM_STUD_INFO.REGION);
+DBMS_OUTPUT.PUT_LINE(' ');
+END LOOP;
+
+IF (I = 0) THEN
+RAISE NO_DATA;
+END IF;
+
+EXCEPTION
+WHEN NO_DATA THEN
+DBMS_OUTPUT.PUT_LINE('NOT SINGLE ADMISSION GIVEN IN BETWEEN THIS TIME DURATION');
+DBMS_OUTPUT.PUT_LINE(' ');
+END;
+/
+
+-- op
+{
+Warning: Procedure created with compilation errors.
+}
+
+
+execute GET_ADM_INFO_BET_DATE('06-SEP-2022','07-SEP-2022');
+
+
+
+-----------------------
+Q6) 
+Write a procedure that will provide count of admission for a
+particular Stream.
+For example, ‘Science’, ’Commerce’
+
+--
+
+CREATE OR REPLACE PROCEDURE GET_NUM_ADM_BY_Stream(
+STR StudentMeritTable.Stream%TYPE
+)
+AS
+ADM_COUNT NUMBER;
+BEGIN
+SELECT COUNT(*) INTO ADM_COUNT FROM ADMISSIONCONFIRMATIONTABLE WHERE Stream = STR;
+DBMS_OUTPUT.PUT_LINE('TOTAL NUMBER OF ADMISSION OF STUDENT OF Stream '|| STR || ' IS : ' || ADM_COUNT);
+DBMS_OUTPUT.PUT_LINE(' ');
+END;
+/
+
+-- op
+{
+Procedure created.
+}
+
+execute GET_NUM_ADM_BY_Stream('COMMERCE');
+
+-- op
+{
+TOTAL NUMBER OF ADMISSION OF STUDENT OF Stream COMMERCE IS : 0
+
+PL/SQL procedure successfully completed.
+}
+
+-----------------------
+Q7) 
+Create a trigger to calculate Percentage and merit Percentage
+automatically in StudentMeritTable.
+
+--
+
+CREATE OR REPLACE TRIGGER CAL_PER_MERITPER
+BEFORE INSERT OR UPDATE ON StudentMeritTable
+FOR EACH ROW
+BEGIN
+:NEW.Percentage := (:NEW.TotalMarksObtained/:NEW.TotalMark)*100;
+IF (:NEW.NoofAttempt = 1) THEN
+:NEW.MeritPercentage := :NEW.Percentage;
+ELSIF (:NEW.NoofAttempt = 2) THEN
+:NEW.MeritPercentage := :NEW.Percentage - 2;
+ELSIF (:NEW.NoofAttempt = 3) THEN
+:NEW.MeritPercentage := :NEW.Percentage - 4;
+ELSIF (:NEW.NoofAttempt >= 4) THEN
+:NEW.MeritPercentage := :NEW.Percentage - 6;
+END IF;
+END;
+/
+
+-- op
+{
+Trigger created.
+}
+
+INSERT INTO StudentMeritTable VALUES(1001,10001,'Jaydev','COMMERCE','SEBC',1,700,600,NULL,NULL,'GSEB','VNSGU');
+
+-- op
+{
+1 row created.
+}
+
+
+SELECT * FROM StudentMeritTable WHERE FormNumber = 1001;
+
+-- op
+{
+
+FORMNUMBER EXAMNUMBER STUDENTNAME                    STREAM
+---------- ---------- ------------------------------ --------------------
+CATEGORY             NOOFATTEMPT  TOTALMARK TOTALMARKSOBTAINED PERCENTAGE
+-------------------- ----------- ---------- ------------------ ----------
+MERITPERCENTAGE BOARD                REGION
+--------------- -------------------- --------------------
+      1001      10001 dhwani                         COMMERCE
+SEBC                           1        700                600 85.7142857
+     85.7142857 GSEB                 VNSGU
+
+}
+
+
+-----------------------
+Q8) 
+Write a procedure that will provide count of admission for a
+--particular Stream and Category.
+--For example,
+--’Science’ and ’Open’
+--’Science’ and ’Sc’
+--’Science’ and ’St’
+--’Commerce’ and ’Open’
+--’Commerce’ and ’Sc’
+--’Commerce’ and ’St’
+
+--
+
+CREATE OR REPLACE PROCEDURE GET_NUM_ADM_BY_Stream_CAT(
+STR StudentMeritTable.Stream%TYPE,
+CAT StudentMeritTable.Category%TYPE
+)
+AS
+ADM_COUNT NUMBER;
+BEGIN
+SELECT COUNT(*) INTO ADM_COUNT FROM ADMISSIONCONFIRMATIONTABLE WHERE Stream = STR AND Category = CAT;
+DBMS_OUTPUT.PUT_LINE('TOTAL NUMBER OF ADMISSION OF STUDENT OF Stream '|| STR || ' AND Category ' || CAT || ' IS : ' || ADM_COUNT);
+DBMS_OUTPUT.PUT_LINE(' ');
+END;
+/
+
+-- op
+{
+Procedure created.
+}
+
+EXECUTE GET_NUM_ADM_BY_Stream_CAT('SCIENCE','SC');
+
+-- op
+{
+TOTAL NUMBER OF ADMISSION OF STUDENT OF Stream SCIENCE AND Category SC IS : 0
+
+PL/SQL procedure successfully completed.
+}
+
+
+-----------------------
+Q9) 
+Write a procedure that will display all information of admission for a particular Stream.
+For example, ‘Science’, ’Commerce’
+
+--
+
+CREATE OR REPLACE PROCEDURE GET_ADM_INFO_BY_Stream
+(STR StudentMeritTable.Stream%TYPE)
+AS
+I NUMBER := 0;
+NO_DATA EXCEPTION;
+ADM_STUD_INFO ADMISSIONCONFIRMATIONTABLE%ROWTYPE;
+
+CURSOR ADM_INFO IS SELECT * FROM ADMISSIONCONFIRMATIONTABLE WHERE Stream = STR;
+
+BEGIN
+OPEN ADM_INFO;
+LOOP
+FETCH ADM_INFO INTO ADM_STUD_INFO;
+EXIT WHEN ADM_INFO%NOTFOUND;
+I := I + 1;
+DBMS_OUTPUT.PUT_LINE('FORM NUMBER IS : ' || ADM_STUD_INFO.FormNumber);
+DBMS_OUTPUT.PUT_LINE('EXAM NUMBER IS : ' || ADM_STUD_INFO.ExamNumber);
+DBMS_OUTPUT.PUT_LINE('STUDENT NAME : ' || ADM_STUD_INFO.StudentName);
+DBMS_OUTPUT.PUT_LINE('Stream : ' || ADM_STUD_INFO.Stream);
+DBMS_OUTPUT.PUT_LINE('Category : ' || ADM_STUD_INFO.Category);
+DBMS_OUTPUT.PUT_LINE('NO OF ATTEMPT IS : ' || ADM_STUD_INFO.NoofAttempt);
+DBMS_OUTPUT.PUT_LINE('TOTAL MARKS IS : ' || ADM_STUD_INFO.TotalMark);
+DBMS_OUTPUT.PUT_LINE('OBTAIN MARKS IS : ' || ADM_STUD_INFO.TotalMarksObtained);
+DBMS_OUTPUT.PUT_LINE('Percentage IS : ' || ADM_STUD_INFO.Percentage);
+DBMS_OUTPUT.PUT_LINE('MERIT Percentage IS : ' || ADM_STUD_INFO.MeritPercentage);
+DBMS_OUTPUT.PUT_LINE('ADMISSION DATE IS : ' || ADM_STUD_INFO.AdmissionDate);
+DBMS_OUTPUT.PUT_LINE('Board IS : ' || ADM_STUD_INFO.Board);
+DBMS_OUTPUT.PUT_LINE('REGION IS : ' || ADM_STUD_INFO.REGION);
+DBMS_OUTPUT.PUT_LINE(' ');
+END LOOP;
+
+IF (I = 0) THEN
+RAISE NO_DATA;
+END IF;
+
+EXCEPTION
+WHEN NO_DATA THEN
+DBMS_OUTPUT.PUT_LINE('NOT SINGLE ADMISSION GIVEN IN THAT Stream');
+DBMS_OUTPUT.PUT_LINE(' ');
+END;
+/
+
+-- op
+{
+Warning: Procedure created with compilation errors.
+}
+
+EXECUTE GET_ADM_INFO_BY_Stream('SCIENCE');
+
+-- op
+{
+
+}
+
+-----------------------
+Q10) 
+Write a procedure that will display all information of admission
+for a particular Stream and Category.
+
+--
+
+CREATE OR REPLACE PROCEDURE GET_ADM_INFO_BY_Stream_CAT(
+STR StudentMeritTable.Stream%TYPE,
+CAT StudentMeritTable.Category%TYPE
+)
+AS
+I NUMBER := 0;
+NO_DATA EXCEPTION;
+ADM_STUD_INFO ADMISSIONCONFIRMATIONTABLE%ROWTYPE;
+CURSOR ADM_INFO IS SELECT * FROM ADMISSIONCONFIRMATIONTABLE WHERE Stream = STR AND Category = CAT;
+
+BEGIN
+OPEN ADM_INFO;
+LOOP
+FETCH ADM_INFO INTO ADM_STUD_INFO;
+EXIT WHEN ADM_INFO%NOTFOUND;
+I := I + 1;
+DBMS_OUTPUT.PUT_LINE('FORM NUMBER IS : ' || ADM_STUD_INFO.FormNumber);
+DBMS_OUTPUT.PUT_LINE('EXAM NUMBER IS : ' || ADM_STUD_INFO.ExamNumber);
+DBMS_OUTPUT.PUT_LINE('STUDENT NAME : ' || ADM_STUD_INFO.StudentName);
+DBMS_OUTPUT.PUT_LINE('Stream : ' || ADM_STUD_INFO.Stream);
+DBMS_OUTPUT.PUT_LINE('Category : ' || ADM_STUD_INFO.Category);
+DBMS_OUTPUT.PUT_LINE('NO OF ATTEMPT IS : ' || ADM_STUD_INFO.NoofAttempt);
+DBMS_OUTPUT.PUT_LINE('TOTAL MARKS IS : ' || ADM_STUD_INFO.TotalMark);
+DBMS_OUTPUT.PUT_LINE('OBTAIN MARKS IS : ' || ADM_STUD_INFO.TotalMarksObtained);
+DBMS_OUTPUT.PUT_LINE('Percentage IS : ' || ADM_STUD_INFO.Percentage);
+DBMS_OUTPUT.PUT_LINE('MERIT Percentage IS : ' || ADM_STUD_INFO.MeritPercentage);
+DBMS_OUTPUT.PUT_LINE('ADMISSION DATE IS : ' || ADM_STUD_INFO.AdmissionDate);
+DBMS_OUTPUT.PUT_LINE('Board IS : ' || ADM_STUD_INFO.Board);
+DBMS_OUTPUT.PUT_LINE('REGION IS : ' || ADM_STUD_INFO.REGION);
+DBMS_OUTPUT.PUT_LINE(' ');
+END LOOP;
+
+IF (I = 0) THEN
+RAISE NO_DATA;
+END IF;
+
+EXCEPTION
+WHEN NO_DATA THEN
+DBMS_OUTPUT.PUT_LINE('NOT SINGLE ADMISSION GIVEN IN THAT Stream AND Category');
+DBMS_OUTPUT.PUT_LINE(' ');
+END;
+/
+
+-- op
+{
+Warning: Procedure created with compilation errors.
+}
+
+
+EXECUTE GET_ADM_INFO_BY_Stream_CAT('SCIENCE','OPEN');
+
+-- op
+{
+
+}
+
+
+-----------------------
+Q11) 
+Write a procedure that will display Cut-Off for a particular Stream.
+Cut-off means lowest Merit Percentage
+For example Input, ‘Science’
+Output: 64.44%
+For example Input, ‘Commerce’
+Output: 88.12%
+
+--
+
+CREATE OR REPLACE PROCEDURE GET_CUTOFF_BY_Stream(
+STR StudentMeritTable.Stream%TYPE
+)
+AS
+CUT_OFF ADMISSIONCONFIRMATIONTABLE.MeritPercentage%TYPE;
+BEGIN
+SELECT MIN(MeritPercentage) INTO CUT_OFF FROM ADMISSIONCONFIRMATIONTABLE WHERE Stream = STR;
+DBMS_OUTPUT.PUT_LINE('THE CUT OFF ' || STR || ' Stream IS : ' || CUT_OFF || '%');
+END;
+/
+
+-- op
+{
+Procedure created.
+}
+
+
+EXECUTE GET_CUTOFF_BY_Stream('SCIENCE');
+
+-- op
+{
+THE CUT OFF SCIENCE Stream IS : %
+
+PL/SQL procedure successfully completed.
+}
+
+-----------------------
+Q12) 
+Write a procedure that will display Cut-Off for a particular Stream
+and Category.
+Cut-off means lowest Merit Percentage
+For example Input, ‘Science’ &amp; ’Open’
+Output: 64.44%
+For example Input, ‘Science’ &amp; ’Sc’
+Output: 54.99%
+For example Input, ‘Science’ &amp; ’Sebc’
+Output: 60.89%
+
+--
+
+CREATE OR REPLACE PROCEDURE GET_CUTOFF_BY_Stream_CAT(
+STR StudentMeritTable.Stream%TYPE,
+CAT ADMISSIONCONFIRMATIONTABLE.Category%TYPE
+)
+AS
+CUT_OFF ADMISSIONCONFIRMATIONTABLE.MeritPercentage%TYPE;
+BEGIN
+SELECT MIN(MeritPercentage) INTO CUT_OFF FROM ADMISSIONCONFIRMATIONTABLE WHERE Stream = STR AND Category = CAT;
+DBMS_OUTPUT.PUT_LINE('THE CUT OFF ' || STR || ' Stream IS : ' || CUT_OFF || '%');
+END;
+/
+
+-- op
+{
+Procedure created.
+}
+
+EXECUTE GET_CUTOFF_BY_Stream_CAT('SCIENCE','OPEN');
+
+-- op
+{
+THE CUT OFF SCIENCE Stream IS : %
+
+PL/SQL procedure successfully completed.
+}
+
+-----------------------
+
+Q13) 
+Write a procedure that will display admission for a particular Stream, Category, Board and Region.
+
+--
+
+CREATE OR REPLACE PROCEDURE ADM_INFO_BY_STR_CAT_B_RIG(
+STR ADMISSIONCONFIRMATIONTABLE.Stream%TYPE,
+CAT ADMISSIONCONFIRMATIONTABLE.Category%TYPE,
+BRD StudentMeritTable.Board%TYPE,
+RGN StudentMeritTable.REGION%TYPE
+)
+AS
+I NUMBER := 0;
+NO_DATA EXCEPTION;
+ADM_STUD_INFO ADMISSIONCONFIRMATIONTABLE%ROWTYPE;
+CURSOR ADM_INFO IS SELECT * FROM ADMISSIONCONFIRMATIONTABLE WHERE Stream = STR AND Category = CAT AND Board = BRD AND REGION = RGN;
+BEGIN
+OPEN ADM_INFO;
+LOOP
+FETCH ADM_INFO INTO ADM_STUD_INFO;
+EXIT WHEN ADM_INFO%NOTFOUND;
+I := I + 1;
+DBMS_OUTPUT.PUT_LINE('FORM NUMBER IS : ' || ADM_STUD_INFO.FormNumber);
+DBMS_OUTPUT.PUT_LINE('EXAM NUMBER IS : ' || ADM_STUD_INFO.ExamNumber);
+DBMS_OUTPUT.PUT_LINE('STUDENT NAME : ' || ADM_STUD_INFO.StudentName);
+DBMS_OUTPUT.PUT_LINE('Stream : ' || ADM_STUD_INFO.Stream);
+DBMS_OUTPUT.PUT_LINE('Category : ' || ADM_STUD_INFO.Category);
+DBMS_OUTPUT.PUT_LINE('NO OF ATTEMPT IS : ' || ADM_STUD_INFO.NoofAttempt);
+DBMS_OUTPUT.PUT_LINE('TOTAL MARKS IS : ' || ADM_STUD_INFO.TotalMark);
+DBMS_OUTPUT.PUT_LINE('OBTAIN MARKS IS : ' || ADM_STUD_INFO.TotalMarksObtained);
+DBMS_OUTPUT.PUT_LINE('Percentage IS : ' || ADM_STUD_INFO.Percentage);
+DBMS_OUTPUT.PUT_LINE('MERIT Percentage IS : ' || ADM_STUD_INFO.MeritPercentage);
+DBMS_OUTPUT.PUT_LINE('ADMISSION DATE IS : ' || ADM_STUD_INFO.AdmissionDate);
+DBMS_OUTPUT.PUT_LINE('MERIT Percentage IS : ' || ADM_STUD_INFO.MeritPercentage);
+DBMS_OUTPUT.PUT_LINE('ADMISSION DATE IS : ' || ADM_STUD_INFO.AdmissionDate);
+DBMS_OUTPUT.PUT_LINE('Board IS : ' || BRD);
+DBMS_OUTPUT.PUT_LINE('REGION IS : ' || RGN);
+DBMS_OUTPUT.PUT_LINE(' ');
+END LOOP;
+
+IF (I = 0) THEN
+RAISE NO_DATA;
+END IF;
+
+EXCEPTION
+WHEN NO_DATA THEN
+DBMS_OUTPUT.PUT_LINE('NOT SINGLE ADMISSION');
+DBMS_OUTPUT.PUT_LINE(' ');
+
+END;
+/
+
+-- op
+{
+Warning: Procedure created with compilation errors.
+}
+
+
+EXECUTE ADM_INFO_BY_STR_CAT_B_RIG('SCIENCE','SEBC','GSEB','VNSGU');
+
+-- op
+{
+
+}
+
+-----------------------
+Q14) 
+Write a procedure that will display admission for a particular
+Stream, Category, Board and Region for specific duration.
+
+--
+
+CREATE OR REPLACE PROCEDURE ADM_INFO_BY_STR_CAT_B_RIG_DUR(
+STR ADMISSIONCONFIRMATIONTABLE.Stream%TYPE,
+CAT ADMISSIONCONFIRMATIONTABLE.Category%TYPE,
+BRD StudentMeritTable.Board%TYPE,
+RGN StudentMeritTable.REGION%TYPE,
+S_DATE DATE,
+E_DATE DATE
+)
+AS
+I NUMBER := 0;
+NO_DATA EXCEPTION;
+ADM_STUD_INFO ADMISSIONCONFIRMATIONTABLE%ROWTYPE;
+CURSOR ADM_INFO IS SELECT * FROM ADMISSIONCONFIRMATIONTABLE WHERE Stream = STR AND Category = CAT AND Board = BRD AND REGION = RGN AND AdmissionDate >= S_DATE AND AdmissionDate <= E_DATE;
+BEGIN
+OPEN ADM_INFO;
+LOOP
+FETCH ADM_INFO INTO ADM_STUD_INFO;
+EXIT WHEN ADM_INFO%NOTFOUND;
+I := I + 1;
+DBMS_OUTPUT.PUT_LINE('FORM NUMBER IS : ' || ADM_STUD_INFO.FormNumber);
+DBMS_OUTPUT.PUT_LINE('EXAM NUMBER IS : ' || ADM_STUD_INFO.ExamNumber);
+DBMS_OUTPUT.PUT_LINE('STUDENT NAME : ' || ADM_STUD_INFO.StudentName);
+DBMS_OUTPUT.PUT_LINE('Stream : ' || ADM_STUD_INFO.Stream);
+DBMS_OUTPUT.PUT_LINE('Category : ' || ADM_STUD_INFO.Category);
+DBMS_OUTPUT.PUT_LINE('NO OF ATTEMPT IS : ' || ADM_STUD_INFO.NoofAttempt);
+DBMS_OUTPUT.PUT_LINE('TOTAL MARKS IS : ' || ADM_STUD_INFO.TotalMark);
+DBMS_OUTPUT.PUT_LINE('OBTAIN MARKS IS : ' || ADM_STUD_INFO.TotalMarksObtained);
+DBMS_OUTPUT.PUT_LINE('Percentage IS : ' || ADM_STUD_INFO.Percentage);
+DBMS_OUTPUT.PUT_LINE('MERIT Percentage IS : ' || ADM_STUD_INFO.MeritPercentage);
+DBMS_OUTPUT.PUT_LINE('ADMISSION DATE IS : ' || ADM_STUD_INFO.AdmissionDate);
+DBMS_OUTPUT.PUT_LINE('MERIT Percentage IS : ' || ADM_STUD_INFO.MeritPercentage);
+DBMS_OUTPUT.PUT_LINE('ADMISSION DATE IS : ' || ADM_STUD_INFO.AdmissionDate);
+DBMS_OUTPUT.PUT_LINE('Board IS : ' || BRD);
+DBMS_OUTPUT.PUT_LINE('REGION IS : ' || RGN);
+DBMS_OUTPUT.PUT_LINE(' ');
+END LOOP;
+
+IF (I = 0) THEN
+RAISE NO_DATA;
+END IF;
+
+EXCEPTION
+WHEN NO_DATA THEN
+DBMS_OUTPUT.PUT_LINE('NOT SINGLE ADMISSION');
+DBMS_OUTPUT.PUT_LINE(' ');
+
+END;
+/
+
+-- op
+{
+Warning: Procedure created with compilation errors.
+}
+
+
+
+EXECUTE ADM_INFO_BY_STR_CAT_B_RIG_DUR('SCIENCE','SEBC','GSEB','VNSGU','16-SEP-2022','27-SEP-2022');
+
+-- op
+{
+
+}

@@ -1,0 +1,303 @@
+create table zone
+(
+ zonecode varchar(3) primary key,
+ zonename varchar(25)
+);
+
+-- op
+{
+Table created.
+}
+
+
+begin
+insert into zone values('z1','NORTH');
+insert into zone values('z2','SOUTH');
+insert into zone values('z3','CENTRAL');
+end;
+/
+
+-- op
+{
+PL/SQL procedure successfully completed.
+}
+
+
+select * from zone;
+
+--op
+{
+ZON  ZONENAME
+---  -------------------------
+z1   NORTH
+z2   SOUTH
+z3   CENTRAL
+}
+
+
+
+
+--
+
+create table ward
+(
+ wardno varchar(3) primary key,
+ wardname varchar(25)
+);
+
+-- op
+{
+Table created.
+}
+
+
+begin
+insert into ward values('w1','ATHWA');
+insert into ward values('w2','ADAJAN');
+insert into ward values('w3','VARACHA');
+insert into ward values('w4','UMRA');
+insert into ward values('w5','PIPLOD');
+insert into ward values('w6','RANDER');
+end;
+/
+
+-- op
+{
+PL/SQL procedure successfully completed.
+}
+
+
+select * from ward;
+
+--op
+{
+WAR  WARDNAME
+---  -------------------------
+w1   ATHWA
+w2   ADAJAN
+w3   VARACHA
+w4   UMRA
+w5   PIPLOD
+w6   RANDER
+
+6 rows selected.
+}
+
+
+
+--
+
+
+create table birthdetail
+(
+ registrationno integer primary key,
+ registrationyear integer,
+ childname varchar(25),
+ fathername varchar(25),
+ mothername varchar(25),
+ birthlocationname varchar(30),
+ birthlocationaddress varchar(30),
+ gender varchar(6),
+ wardcode varchar(3) references ward,
+ zonecode varchar(3) references zone
+);
+
+-- op
+{
+Table created.
+}
+
+
+begin
+insert into birthdetail values(1,2009,'dhwani','harshad','krishna','surat','surat','female','w2','z1');
+insert into birthdetail values(2,2010,'shriya','jitu','jayshree','surat','gandevi','female','w1','z1');
+insert into birthdetail values(3,2011,'preeit','chintu','riddhi','surat','hariom','male','w1','z1');
+insert into birthdetail values(4,2012,'manan','harshad','krishna','surat','surat','male','w2','z2');
+insert into birthdetail values(5,2013,'helly','keyur','chaitali','sachin','sachin','female','w2','z3');
+end;
+/
+
+-- op
+{
+PL/SQL procedure successfully completed.
+}
+
+
+select * from birthdetail;
+
+
+
+---
+
+
+
+(1) getBirthListByWardName(‘WardName’)
+For example, getBirthListByWardName(‘Athwa’) will give birth list of Athwa
+ward.
+
+--
+
+
+CREATE OR REPLACE PROCEDURE getBirthListByWardName(WNAME ward.wardname%TYPE)
+AS
+CURSOR C1 IS SELECT * FROM birthdetail WHERE wardcode=(SELECT wardcode FROM ward WHERE wardname = WNAME);
+BEGIN
+FOR D IN C1 LOOP
+DBMS_OUTPUT.PUT_LINE('registration no : ' || D.registrationno);
+DBMS_OUTPUT.PUT_LINE('registration Year : ' || D.registrationyear);
+DBMS_OUTPUT.PUT_LINE('Child Name : ' || D.childname);
+DBMS_OUTPUT.PUT_LINE('Father Name : ' || D.fathername);
+DBMS_OUTPUT.PUT_LINE('Mother Name : ' || D.mothername);
+DBMS_OUTPUT.PUT_LINE('Birth Location Name : ' || D.birthlocationname);
+DBMS_OUTPUT.PUT_LINE('Birth Location Address : ' || D.birthlocationaddress);
+DBMS_OUTPUT.PUT_LINE('Gender : ' || D.gender);
+DBMS_OUTPUT.PUT_LINE('Ward Code : ' || D.wardcode);
+DBMS_OUTPUT.PUT_LINE('Zone Code : ' || D.zonecode );
+DBMS_OUTPUT.PUT_LINE(' ');
+END LOOP;
+END;
+/
+
+
+--op
+{
+Procedure created.
+}
+
+
+
+BEGIN
+getBirthListByWardName('ATHWA');
+END;
+/
+
+
+--op
+{
+
+registration no : 2
+registration no : 3
+
+
+Statement processed
+}
+
+
+---------------------------
+
+(2) getBirthListBYZoneNameAndYear(‘ZoneName’,Year)
+getBirthListBYZoneNameAndYear(‘NorthZone’,2009) will give birth list of North Zone of the year 2009
+
+--
+
+create or replace procedure getBirthListByZoneNameAndYear(zname zone.zonename%type, zyear birthdetail.registrationyear%type)
+as
+cursor c1 is select * from birthdetail where registrationyear = zyear and zonecode is(select zonecode from zone where zonename= zname);
+begin
+for l in c1 loop
+dbms_output.put_line(l.zonename || l.registrationyear);
+dbms_output.put_line(' ');
+end loop;
+end;
+/
+
+
+--op
+{
+only with dbms_output.put_line(l.registrationyear);
+
+Procedure created.
+}
+
+
+
+BEGIN
+getBirthListBYZoneNameAndYear('NORTH',2009);
+END;
+/
+
+--op
+{
+2009
+ 
+
+Statement processed.
+}
+
+
+==== or 
+
+
+create or replace procedure getBirthListByZoneNameAndYear(zname zone.zonename%type, zyear birthdetail.registrationyear%type)
+as
+cursor c1 is select registrationyear from birthdetail where registrationyear = zyear and zonecode=(select zonecode from zone where zonename= zname);
+begin
+FOR D IN C1 LOOP
+DBMS_OUTPUT.PUT_LINE('registration no : ' || D.registrationno);
+DBMS_OUTPUT.PUT_LINE('registration Year : ' || D.registrationyear);
+DBMS_OUTPUT.PUT_LINE('Child Name : ' || D.childname);
+DBMS_OUTPUT.PUT_LINE('Father Name : ' || D.fathername);
+DBMS_OUTPUT.PUT_LINE('Mother Name : ' || D.mothername);
+DBMS_OUTPUT.PUT_LINE('Birth Location Name : ' || D.birthlocationname);
+DBMS_OUTPUT.PUT_LINE('Birth Location Address : ' || D.birthlocationaddress);
+DBMS_OUTPUT.PUT_LINE('Gender : ' || D.gender);
+DBMS_OUTPUT.PUT_LINE('Ward Code : ' || D.wardcode);
+DBMS_OUTPUT.PUT_LINE('Zone Code : ' || D.zonecode );
+DBMS_OUTPUT.PUT_LINE(' ');
+end loop;
+end;
+/
+
+
+--------------------------------------------------------
+
+	INSERT	UPDATE	DELETE
+
+--------------------------------------------------------
+
+create or replace procedure ins(
+rno birthdetail.registrationno%type ,
+ryear birthdetail.registrationyear%type ,
+childnm birthdetail.childname%type ,
+dadnm birthdetail.fathername%type ,
+momnm birthdetail.mothername%type ,
+bltime birthdetail.birthlocationname%type ,
+bladd birthdetail.birthlocationaddress%type ,
+gen birthdetail.gender%type ,
+wcode birthdetail.wardcode%type ,
+zcode birthdetail.zonecode%type)
+as
+begin
+insert into birthdetail values(rno,ryear,childnm,dadnm,momnm,bltime,bladd,gen,wcode,zcode);
+end;
+/
+
+
+--op
+{
+Procedure created.
+}
+
+
+
+
+begin
+ins(25,2020,'sp','mx','sd','la','usa','male','w3','z2');
+end;
+/
+
+--op
+{
+PL/SQL procedure successfully completed.
+}
+
+
+
+
+select * from birthdetail;
+
+
+
+
+
+

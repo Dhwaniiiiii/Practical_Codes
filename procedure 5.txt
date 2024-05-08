@@ -1,0 +1,212 @@
+CREATE TABLE LANGUAGEMASTER
+(
+LANGUAGEID NUMBER PRIMARY KEY,
+LANGUAGENAME VARCHAR(50)
+);
+
+
+BEGIN
+INSERT INTO LANGUAGEMASTER VALUES(1, 'Hindi');
+INSERT INTO LANGUAGEMASTER VALUES(2, 'English');
+INSERT INTO LANGUAGEMASTER VALUES(3, 'Gujarati');
+INSERT INTO LANGUAGEMASTER VALUES(4, 'Telugu');
+INSERT INTO LANGUAGEMASTER VALUES(5, 'Marthi');
+END;
+/
+
+
+
+
+SELECT * FROM LANGUAGEMASTER;
+
+
+========
+
+CREATE TABLE RATINGMASTER
+(
+RATINGID NUMBER PRIMARY KEY,
+RATINGNAME VARCHAR(50)
+);
+
+
+
+BEGIN
+INSERT INTO RATINGMASTER VALUES(1, 'Good');
+INSERT INTO RATINGMASTER VALUES(2, 'Okay');
+INSERT INTO RATINGMASTER VALUES(3, 'Excellent');
+INSERT INTO RATINGMASTER VALUES(4, 'Outstanding');
+INSERT INTO RATINGMASTER VALUES(5, 'Bad');
+END;
+/
+
+
+
+SELECT * FROM RATINGMASTER;
+
+
+
+
+========
+
+CREATE TABLE MOVIEMASTER
+(
+MOVIEID NUMBER PRIMARY KEY,
+MOVIENAME VARCHAR(100),
+LANGUAGEID NUMBER REFERENCES LANGUAGEMASTER,
+RATINGID NUMBER REFERENCES RATINGMASTER
+);
+
+-- op
+{
+Table created.
+}
+
+
+BEGIN
+INSERT INTO MOVIEMASTER VALUES(1, 'AASHIQUI 2', 1, 4);
+INSERT INTO MOVIEMASTER VALUES(2, 'RAADO', 3, 4);
+INSERT INTO MOVIEMASTER VALUES(3, 'RRR', 4, 2);
+INSERT INTO MOVIEMASTER VALUES(4, 'DISASTER', 5, 2);
+INSERT INTO MOVIEMASTER VALUES(5, 'ANANYA', 5, 5);
+INSERT INTO MOVIEMASTER VALUES(6, 'CHHALO DIVAS', 3, 3);
+INSERT INTO MOVIEMASTER VALUES(7, 'BRAHMASTRA', 1, 1);
+INSERT INTO MOVIEMASTER VALUES(8, 'TARE ZAMEEN PER', 1, 3);
+INSERT INTO MOVIEMASTER VALUES(9, 'AVENGER : ENDGAME', 2, 4);
+INSERT INTO MOVIEMASTER VALUES(10, 'SPIDERMAN' , 2, 4);
+END;
+/
+
+
+SELECT * FROM MOVIEMASTER;
+------
+
+
+
+1 
+Create stored procedure to display all movie names by language.
+For example,
+ display all movie name of Hindi Language
+
+--
+
+
+CREATE OR REPLACE PROCEDURE MovieNameByLang(lang LANGUAGEMASTER.LANGUAGENAME%TYPE)
+AS
+cursor d is select MOVIENAME from MOVIEMASTER where LANGUAGEID =(select LANGUAGEID from LANGUAGEMASTER where LANGUAGENAME = lang);
+BEGIN
+for i in d loop
+dbms_output.put_line(i.MOVIENAME);
+end loop;
+END;
+/
+
+-- op
+{
+Procedure created.
+}
+
+begin
+MovieNameByLang('Hindi');
+end;
+/
+
+-- op
+{
+AASHIQUI 2
+BRAHMASTRA
+TARE ZAMEEN PER
+
+Statement processed.
+}
+
+---------
+
+Q2 
+Create stored procedure to display all movie names by language and rating name.
+For example,
+ display all movie name of Hindi Language with Excellent rating
+
+--
+
+create or replace procedure ByMovieNameLangRate
+(lang LANGUAGEMASTER.LANGUAGENAME%TYPE , rname RATINGMASTER.RATINGNAME%TYPE)
+as
+cursor c1 is 
+SELECT MOVIENAME from MOVIEMASTER where LANGUAGEID in(
+select LANGUAGEID from LANGUAGEMASTER where LANGUAGENAME='Hindi' and LANGUAGEID in(
+select LANGUAGEID from MOVIEMASTER where RATINGID in(
+select RATINGID from RATINGMASTER where RATINGNAME = 'Excellent')));
+BEGIN
+for i in c1 loop
+dbms_output.put_line(i.MOVIENAME || i.RATINGNAME);
+end loop;
+END;
+/
+
+
+
+-- op
+{
+}
+
+BEGIN
+ByMovieNameLangRate('Hindi');
+END;
+/
+
+-- op
+{
+}
+
+
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+-- insert
+
+CREATE OR REPLACE PROCEDURE p1(lid LANGUAGEMASTER.LANGUAGEID%TYPE , lname  LANGUAGEMASTER.LANGUAGENAME%TYPE)
+AS
+BEGIN
+INSERT INTO LANGUAGEMASTER VALUES(lid,lname);
+END;
+/
+
+BEGIN
+p1(6,'dp');
+END;
+/
+
+select * from LANGUAGEMASTER;
+
+
+-- update
+
+create or replace procedure p2(lid LANGUAGEMASTER.LANGUAGEID%TYPE, lname LANGUAGEMASTER.LANGUAGENAME%TYPE)
+AS
+BEGIN
+update LANGUAGEMASTER set LANGUAGENAME= lname where LANGUAGEID = lid; 
+END;
+/
+
+begin
+p2(6,'telugu');
+end;
+/
+
+select * from LANGUAGEMASTER;
+
+-- delete
+
+create or replace procedure p3(lid LANGUAGEMASTER.LANGUAGEID%TYPE)
+AS
+BEGIN
+delete from LANGUAGEMASTER where LANGUAGEID= lid; 
+END;
+/
+
+begin
+p2(6);
+end;
+/
